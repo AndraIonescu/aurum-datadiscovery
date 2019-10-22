@@ -150,7 +150,7 @@ class FieldNetwork:
         :return:
         """
         score = {'score': score}
-        self.__G.add_edge(node_src, node_target, relation, score)
+        self.__G.add_edge(node_src, node_target, relation, score=score)
 
     def fields_degree(self, topk):
         degree = nx.degree(self.__G)

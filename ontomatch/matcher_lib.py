@@ -12,6 +12,9 @@ import operator
 from collections import namedtuple
 import numpy as np
 
+from ontomatch.matching import Matching
+from ontomatch.simple_trie import SimpleTrie
+
 
 class MatchingType(Enum):
     L1_CLASSNAME_ATTRVALUE = 0
@@ -23,176 +26,6 @@ class MatchingType(Enum):
     L52_CLASSNAME_ATTRNAME_SEM = 6
     L6_CLASSNAME_RELATION_SEMSIG = 7
     L7_CLASSNAME_ATTRNAME_FUZZY = 8
-
-
-Leave = namedtuple('Leave', 'id, matching')
-
-
-class SimpleTrie:
-
-    def __init__(self):
-        self._leave = 0
-        self.root = dict()
-        self.step_dic = defaultdict(int)
-        self.summarized_matchings = dict()
-
-    def add_sequences(self, sequences, seq_corresponding_matching):
-        self.step_dic["root"] = len(sequences)  # add also the number of sequences
-        for seq in sequences:
-            current_dict = self.root
-            for token in seq:
-                current_dict = current_dict.setdefault(token, {})  # another dict as default
-                self.step_dic[token] += 1
-            self._leave += 1  # increase leave id
-            leave = Leave(self._leave, seq_corresponding_matching[str(seq)])  # create leave and assign matchings
-            current_dict[self._leave] = leave
-        return self.root, self.step_dic
-
-    def _reduce_matchings(self, subtree, output):
-        if type(subtree) is Leave:
-            for el in subtree.matching:
-                output.add(el)
-        else:
-            for child in subtree.keys():
-                if type(child) is not Leave:
-                    output = self._reduce_matchings(subtree[child], output)
-                elif type(child) is Leave:
-                    for el in subtree[child].matching:
-                        output.add(el)
-        return output
-
-    def _add_matchings(self, subtree, child):
-        subtree = subtree[child]
-        if type(subtree) is Leave:
-            matchings_of_child = subtree.matching
-            for el in matchings_of_child:
-                self.summarized_matchings[el] = 1  # the child
-            return
-        matchings = self._reduce_matchings(subtree, set())
-        sch, cla = list(matchings)[0]
-        new_match = (sch, (cla[0], child))  # child summarizes all the others
-        self.summarized_matchings[new_match] = len(matchings)  # the number
-
-    def _add_matchings2(self, subtree, parent):
-
-        matchings = self._reduce_matchings(subtree, set())
-        sch, cla = list(matchings)[0]
-        new_match = (sch, (cla[0], parent))  # child summarizes all the others
-        self.summarized_matchings[new_match] = len(matchings)  # the number
-
-    """
-    def cuts(self, current_node, subtree=None, num_seqs=None):
-        if subtree is None and num_seqs is None:
-            subtree = self.root
-            num_seqs = self.step_dic["root"]
-
-        #children = len(subtree.keys())
-        children_represented = self.step_dic[current_node]
-        ratio_cut = float(children / num_seqs)
-        if ratio_cut > 0.5:
-            return True
-        return False
-    """
-
-    def summarize(self, num_seqs):
-
-        def summarize_seq(num_seqs, subtree=None, current_node=None):
-
-            # Choose the max representing child
-            max_repr = 0
-            chosen_child = None
-            for child in subtree.keys():
-                represented_seqs = self.step_dic[child]
-                if represented_seqs > max_repr:
-                    max_repr = represented_seqs
-                    chosen_child = child
-
-            # Does the max representing child cuts?
-            ratio_cut = float(max_repr / num_seqs)
-            if ratio_cut > 0.4:  # if cuts, keep digging
-                return summarize_seq(num_seqs, subtree[chosen_child], chosen_child)
-            else:  # i then summarize
-                matchings = self._reduce_matchings(subtree, set())
-                return matchings, current_node
-
-        matchings, cutter = summarize_seq(num_seqs, self.root, "root")
-        #sch, cla = list(matchings)[0]
-        #new_match = (sch, (cla[0], cutter))
-        return matchings, cutter
-
-
-class Matching:
-
-    def __init__(self, db_name, source_name):
-        self.db_name = db_name
-        self.source_name = source_name
-        self.source_level_matchings = defaultdict(lambda: defaultdict(list))
-        self.attr_matchings = defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
-
-    def add_relation_correspondence(self, kr_name, class_name, matching_type):
-        self.source_level_matchings[kr_name][class_name].append(matching_type)
-
-    def add_attribute_correspondence(self, attr_name, kr_name, class_name, matching_type):
-        self.attr_matchings[attr_name][kr_name][class_name].append(matching_type)
-
-    def __str__(self):
-        header = self.db_name + " - " + self.source_name
-        relation_matchings = list()
-        relation_matchings.append(header)
-        if len(self.source_level_matchings.items()) > 0:
-            for kr_name, values in self.source_level_matchings.items():
-                for class_name, matchings in values.items():
-                    line = kr_name + " - " + class_name + " : " + str(matchings)
-                    relation_matchings.append(line)
-        else:
-            line = "0 relation matchings"
-            relation_matchings.append(line)
-        if len(self.attr_matchings.items()) > 0:
-            for attr_name, values in self.attr_matchings.items():
-                for kr_name, classes in values.items():
-                    for class_name, matchings in classes.items():
-                        line = attr_name + " ==>> " + kr_name + " - " + class_name + " : " + str(matchings)
-                        relation_matchings.append(line)
-        string_repr = '\n'.join(relation_matchings)
-        return string_repr
-
-    def get_matchings(self):
-        def get_matching_code(ms):
-            code_value = 0
-            for m in ms:
-                code_value += m.value
-            return code_value
-
-        matchings = []
-        for kr_name, values in self.source_level_matchings.items():
-            for class_name, ms in values.items():
-                mcode = get_matching_code(ms)
-                match = ((self.db_name, self.source_name, "_"), (kr_name, class_name), mcode)
-                matchings.append(match)
-        for attr_name, values in self.attr_matchings.items():
-            for kr_name, classes in values.items():
-                for class_name, ms in classes.items():
-                    mcode = get_matching_code(ms)
-                    match = ((self.db_name, self.source_name, attr_name), (kr_name, class_name), mcode)
-                    matchings.append(match)
-        return matchings
-
-    def print_serial(self):
-        relation_matchings = []
-        for kr_name, values in self.source_level_matchings.items():
-            for class_name, matchings in values.items():
-                line = self.db_name + " %%% " + self.source_name + " %%% _ ==>> " + kr_name \
-                       + " %%% " + class_name + " %%% " + str(matchings)
-                relation_matchings.append(line)
-        for attr_name, values in self.attr_matchings.items():
-            for kr_name, classes in values.items():
-                for class_name, matchings in classes.items():
-                    line = self.db_name + " %%% " + self.source_name + " %%% " + attr_name \
-                           + " ==>> " + kr_name + " %%% " + class_name + " %%% " + str(matchings)
-                    relation_matchings.append(line)
-        #string_repr = '\n'.join(relation_matchings)
-        return relation_matchings
-
 
 
 # double check for better recall
@@ -618,7 +451,7 @@ def find_relation_class_attr_name_sem_matchings_lsh2(network, kr_handlers,
     # lsh_index = MinHashLSH(threshold=0.1, num_perm=100)
 
     # lsh_index = LSHRandomProjectionsIndex(100, projection_count=30)
-    lsh_index = LSHForest(random_state=42)
+    # lsh_index = LSHForest(random_state=42)
 
     mh_cache = dict()
 
@@ -649,7 +482,7 @@ def find_relation_class_attr_name_sem_matchings_lsh2(network, kr_handlers,
                         vecs.append(neg_sv)
                         index += 1
 
-    lsh_index.fit(vecs)
+    # lsh_index.fit(vecs)
 
     matches = defaultdict(lambda: defaultdict(list))
 
@@ -677,7 +510,9 @@ def find_relation_class_attr_name_sem_matchings_lsh2(network, kr_handlers,
                         index += 1
                         cla_vecs.append(sv)
 
-    distances, indices = lsh_index.kneighbors(cla_vecs, n_neighbors=3)
+    distances, indices = [], []
+    # distances, indices = lsh_index.kneighbors(cla_vecs, n_neighbors=3)
+
 
     cla_vecs = None  # gc
 
@@ -941,8 +776,10 @@ def find_relation_class_name_sem_matchings(network, kr_handlers,
                     #if sv is not None:
                     svs.append(sv)  # append even None, to apply penalization later
             names.append(('class', (kr_name, original_cl_name), svs))
+
     pos_matchings = []  # evidence for a real matching
     neg_matchings = []  # evidence that this matching probably is wrong
+
     for idx_rel in range(0, num_relations_inserted):  # Compare only with classes
         for idx_class in range(num_relations_inserted, len(names)):
             ban_index1, ban_index2 = get_ban_indexes(names[idx_rel][1][1], names[idx_class][1][1])
@@ -964,7 +801,7 @@ def find_relation_class_name_sem_matchings(network, kr_handlers,
     return pos_matchings, neg_matchings
 
 
-from sklearn.neighbors import LSHForest
+# from sklearn.neighbors import LSHForest
 
 
 def find_relation_class_name_sem_matchings_lsh2(network, kr_handlers,
@@ -977,7 +814,7 @@ def find_relation_class_name_sem_matchings_lsh2(network, kr_handlers,
     #lsh_index = MinHashLSH(threshold=0.1, num_perm=100)
 
     #lsh_index = LSHRandomProjectionsIndex(100, projection_count=30)
-    lsh_index = LSHForest(random_state=42)
+    # lsh_index = LSHForest(random_state=42)
 
     mh_cache = dict()
 
@@ -1006,7 +843,7 @@ def find_relation_class_name_sem_matchings_lsh2(network, kr_handlers,
                         vecs.append(neg_sv)
                         index += 1
 
-    lsh_index.fit(vecs)
+    # lsh_index.fit(vecs)
 
     matches = defaultdict(lambda: defaultdict(list))
 
@@ -1033,7 +870,8 @@ def find_relation_class_name_sem_matchings_lsh2(network, kr_handlers,
                         index += 1
                         cla_vecs.append(sv)
 
-    distances, indices = lsh_index.kneighbors(cla_vecs, n_neighbors=3)
+    # distances, indices = lsh_index.kneighbors(cla_vecs, n_neighbors=3)
+    distances, indices = [], []
 
     cla_idx = 0
     for el_distance, el_index in zip(distances, indices):

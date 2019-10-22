@@ -30,7 +30,7 @@ class OntoHandler:
         self.ontology_name = file
         ont = ontospy.Ontospy(file)
         self.o = ont
-        self.objectProperties = self.o.objectProperties  # cache this
+        self.objectProperties = self.o.all_properties  # cache this
         self.obtain_class_hierarchy_and_signatures()
 
     def obtain_class_hierarchy_and_signatures(self):
@@ -60,9 +60,9 @@ class OntoHandler:
         self.o = pickle.load(f)
         self.class_hierarchy = pickle.load(f)
         self.class_hierarchy_signatures = pickle.load(f)
-        self.objectProperties = self.o.objectProperties
+        self.objectProperties = self.o.all_properties_object
         self.map_classname_class = dict()
-        for c in self.o.classes:
+        for c in self.o.all_classes:
             label = c.bestLabel().title()
             self.map_classname_class[label] = c
         f.close()
@@ -74,10 +74,10 @@ class OntoHandler:
         :param o:
         :return:
         """
-        return [x.bestLabel().title() for x in self.o.classes]
+        return [x.bestLabel().title() for x in self.o.all_classes]
 
     def class_and_descr(self):
-        for x in self.o.classes:
+        for x in self.o.all_classes:
             class_name = x.bestLabel().title()
             descr = x.bestDescription()
             yield (class_name, descr)
@@ -87,7 +87,7 @@ class OntoHandler:
         Return list of IDs
         :return:
         """
-        return [x.id for x in self.o.classes]
+        return [x.id for x in self.o.all_classes]
 
     def name_of_class(self, class_id):
         """
@@ -184,7 +184,7 @@ class OntoHandler:
 
         flatten = []
 
-        for c in self.o.classes:
+        for c in self.o.all_classes:
             if len(c.children()) > 0:
                 el = (c.bestLabel().title(), [(ch.id, ch.bestLabel().title()) for ch in c.children()])
                 flatten.append(el)

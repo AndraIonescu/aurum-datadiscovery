@@ -1242,10 +1242,7 @@ def find_sem_coh_matchings(network, kr_handlers, sem_sim_threshold=0.7, group_si
         all_classes = kr_handler.classes()
         for cl in all_classes:
             original_cl_name = cl
-            cl = nlp.camelcase_to_snakecase(cl)
-            cl = cl.replace('-', ' ')
-            cl = cl.replace('_', ' ')
-            cl = cl.lower()
+            cl = nlp.curate_string(cl)
             svs = []
             for token in cl.split():
                 if token not in stopwords.words('english'):

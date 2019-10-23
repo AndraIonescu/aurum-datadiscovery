@@ -14,7 +14,7 @@ import numpy as np
 
 from ontomatch.matching import Matching
 from ontomatch.simple_trie import SimpleTrie
-
+import ontomatch.matcher_lib_utils as utils
 
 class MatchingType(Enum):
     L1_CLASSNAME_ATTRVALUE = 0
@@ -694,21 +694,22 @@ def find_relation_class_attr_name_matching(network, kr_handlers, minhash_sim_thr
     num_attributes_inserted = len(names)
 
     # Retrieve class names
-    for kr_name, kr_handler in kr_handlers.items():
-        all_classes = kr_handler.classes()
-        for cl in all_classes:
-            if cl == "SMILES" or cl == "InChI":
-                print("a")
-            original_cl_name = cl
-            #cl = nlp.camelcase_to_snakecase(cl)
-            cl = cl.replace('-', ' ')
-            cl = cl.replace('_', ' ')
-            cl = cl.lower()
-            m = MinHash(num_perm=64)
-            for token in cl.split():
-                if token not in stopwords.words('english'):
-                    m.update(token.encode('utf8'))
-            names.append(('class', (kr_name, original_cl_name), m))
+    # for kr_name, kr_handler in kr_handlers.items():
+    #     all_classes = kr_handler.classes()
+    #     for cl in all_classes:
+    #         if cl == "SMILES" or cl == "InChI":
+    #             print("a")
+    #         original_cl_name = cl
+    #         #cl = nlp.camelcase_to_snakecase(cl)
+    #         cl = cl.replace('-', ' ')
+    #         cl = cl.replace('_', ' ')
+    #         cl = cl.lower()
+    #         m = MinHash(num_perm=64)
+    #         for token in cl.split():
+    #             if token not in stopwords.words('english'):
+    #                 m.update(token.encode('utf8'))
+    #         names.append(('class', (kr_name, original_cl_name), m))
+    names.extend(utils.retrieve_class_names(kr_handlers, num_perm=64))
 
     # Index all the minhashes
     lsh_index = MinHashLSH(threshold=minhash_sim_threshold, num_perm=64)
@@ -718,8 +719,6 @@ def find_relation_class_attr_name_matching(network, kr_handlers, minhash_sim_thr
 
     matchings = []
     for idx in range(0, num_attributes_inserted):  # Compare only with classes
-        if names[idx][1][2] == "standard_inchi" or names[idx][1][2] == "standard_inchi_key":
-            print("B")
         N = lsh_index.query(names[idx][2])
         for n in N:
             kind_q = names[idx][0]
@@ -1100,19 +1099,20 @@ def find_relation_class_name_matchings(network, kr_handlers, minhash_sim_thresho
     num_relations_inserted = len(names)
 
     # Retrieve class names
-    for kr_name, kr_handler in kr_handlers.items():
-        all_classes = kr_handler.classes()
-        for cl in all_classes:
-            original_cl_name = cl
-            cl = nlp.camelcase_to_snakecase(cl)
-            cl = cl.replace('-', ' ')
-            cl = cl.replace('_', ' ')
-            cl = cl.lower()
-            m = MinHash(num_perm=32)
-            for token in cl.split():
-                if token not in stopwords.words('english'):
-                    m.update(token.encode('utf8'))
-            names.append(('class', (kr_name, original_cl_name), m))
+    # for kr_name, kr_handler in kr_handlers.items():
+    #     all_classes = kr_handler.classes()
+    #     for cl in all_classes:
+    #         original_cl_name = cl
+    #         cl = nlp.camelcase_to_snakecase(cl)
+    #         cl = cl.replace('-', ' ')
+    #         cl = cl.replace('_', ' ')
+    #         cl = cl.lower()
+    #         m = MinHash(num_perm=32)
+    #         for token in cl.split():
+    #             if token not in stopwords.words('english'):
+    #                 m.update(token.encode('utf8'))
+    #         names.append(('class', (kr_name, original_cl_name), m))
+    names.extend(utils.retrieve_class_names(kr_handlers))
 
     # Index all the minhashes
     lsh_index = MinHashLSH(threshold=minhash_sim_threshold, num_perm=32)

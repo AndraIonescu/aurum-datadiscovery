@@ -182,8 +182,8 @@ class SemProp:
 
 def init_test():
     sp = SemProp()
-    sp.add_data_model('test/chembl22')
-    sp.add_language_model('../../models/glove.6B/glove.6B.200d.txt')
+    sp.add_data_model('../../data/chembl22/')
+    sp.add_language_model('../../data/glove.6B.100d.txt')
     sp.init_api()
     sp.add_ontology('efo', 'cache_onto/efo.pkl')
     return sp

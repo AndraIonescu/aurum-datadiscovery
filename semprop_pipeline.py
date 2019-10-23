@@ -46,7 +46,15 @@ class SemProp:
 
         self.ontomatch_api.add_krs([(onto_name, path_to_ontology)], parsed=is_parsed)
 
-    def __sem_prop_pipeline(self, om, network, kr_handlers, store_client, sim_threshold_attr=0.5, sim_threshold_rel=0.5,
+    def find_syntactic_sim(self, network, kr_handlers, sim_threshold_attr=0.5, sim_threshold_rel=0.5):
+        l4_matchings = matcherlib.find_relation_class_name_matchings(network, kr_handlers,
+                                                                     minhash_sim_threshold=sim_threshold_rel)
+        l5_matchings = matcherlib.find_relation_class_attr_name_matching(network, kr_handlers,
+                                                                         minhash_sim_threshold=sim_threshold_attr)
+        return l4_matchings, l5_matchings
+
+
+    def find_matchings(self, om, network, kr_handlers, store_client, sim_threshold_attr=0.5, sim_threshold_rel=0.5,
                           sem_threshold_attr=0.5, sem_threshold_rel=0.5, coh_group_threshold=0.5,
                           coh_group_size_cutoff=1, sensitivity_cancellation_signal=0.4):
 
@@ -65,78 +73,12 @@ class SemProp:
                                                                            sem_sim_threshold=coh_group_threshold,
                                                                            group_size_cutoff=coh_group_size_cutoff)
 
-            # relation cancellation
-            st = time.time()
-            cancelled_l4_matchings = []
-            l4_dict = dict()
-            l4_matchings_set = set(l4_matchings)
-            for matching in l4_matchings_set:
-                l4_dict[matching] = 1
-            total_cancelled = 0
-            for m in neg_l42_matchings:
-                if m in l4_dict:
-                    total_cancelled += 1
-                    l4_matchings_set.remove(m)
-                    cancelled_l4_matchings.append(m)
-            l4_matchings = list(l4_matchings_set)
-            et = time.time()
-            print("l4 cancel time: " + str((et - st)))
+            l4_matchings = self.remove_negative_pairs(l4_matchings, neg_l42_matchings)
+            l5_matchings = self.remove_negative_pairs(l5_matchings, neg_l52_matchings)
+            l42_matchings = self.coh_group_cancellation_relation(l42_matchings, l6_matchings)
+            new_l52_matchings = self.coh_group_cancellation_attribute(l52_matchings, l6_matchings)
 
-            # attribute cancellation
-            st = time.time()
-            cancelled_l5_matchings = []
-            l5_dict = dict()
-            l5_matchings_set = set(l5_matchings)
-            for matching in l5_matchings:
-                l5_dict[matching] = 1
-            total_cancelled = 0
-            for m in neg_l52_matchings:
-                if m in l5_dict:
-                    total_cancelled += 1
-                    l5_matchings_set.remove(m)
-                    cancelled_l5_matchings.append(m)
-            l5_matchings = list(l5_matchings_set)
-            et = time.time()
-            print("l5 cancel time: " + str((et - st)))
-
-            # coh group cancellation relation
-            st = time.time()
-            l6_dict = dict()
-            l42_matchings_set = set(l42_matchings)
-            for matching in l6_matchings:
-                l6_dict[matching] = 1
-            for m in l42_matchings:
-                if m not in l6_dict:
-                    l42_matchings_set.remove(m)
-            l42_matchings = list(l42_matchings_set)
-            et = time.time()
-            print("l42 cancel time: " + str((et - st)))
-
-            # coh group cancellation attribute
-            st = time.time()
-            l52_dict = defaultdict(list)
-            for matching in l52_matchings:
-                # adapt matching to be compared to L6
-                sch, cla = matching
-                sch0, sch1, sch2 = sch
-                idx = ((sch0, sch1, '_'), cla)
-                l52_dict[idx].append(matching)
-
-            # coh group cancellation attributes
-            idx_to_remove = []
-            # collect idx to remove
-            for k, v in l52_dict.items():
-                if k not in l6_dict:
-                    idx_to_remove.append(k)
-            # remove the indexes and take the values as matching list
-            for el in idx_to_remove:
-                del l52_dict[el]
-            l52_matchings = []
-            for k, v in l52_dict.items():
-                for el in v:
-                    l52_matchings.append(el)
-
-            # Build content sim
+            #Build content sim
             om.priv_build_content_sim(0.6)
 
             l1_matchings = []
@@ -146,24 +88,76 @@ class SemProp:
 
             l7_matchings = matcherlib.find_hierarchy_content_fuzzy(kr_handlers, store_client)
 
-            et = time.time()
-            print("l1 total: " + str(len(l1_matchings)))
-            print("l4 total: " + str(len(l4_matchings)))
-            print("l42 total: " + str(len(l42_matchings)))
-            print("l5 total: " + str(len(l5_matchings)))
-            print("l52 total: " + str(len(l52_matchings)))
-            print("l7 total: " + str(len(l7_matchings)))
-            print("Took: " + str(et - st))
+            # print("l1 total: " + str(len(l1_matchings)))
+            # print("l4 total: " + str(len(l4_matchings)))
+            # print("l42 total: " + str(len(l42_matchings)))
+            # print("l5 total: " + str(len(l5_matchings)))
+            # print("l52 total: " + str(len(l52_matchings)))
+            # print("l7 total: " + str(len(l7_matchings)))
 
-            return l4_matchings, l5_matchings, l42_matchings, l52_matchings, l1_matchings, l7_matchings
+            return l4_matchings, l5_matchings, l42_matchings, new_l52_matchings, l1_matchings, l7_matchings
 
-    def find_matchings(self):
+    def coh_group_cancellation_attribute(self, positive_matchings, coh_groups):
+        st = time.time()
+        l52_dict = defaultdict(list)
+        for matching in positive_matchings:
+            # adapt matching to be compared to L6
+            sch, cla = matching
+            sch0, sch1, sch2 = sch
+            idx = ((sch0, sch1, '_'), cla)
+            l52_dict[idx].append(matching)
+
+        idx_to_remove = []
+        # collect idx to remove
+        for k, v in l52_dict.items():
+            if k not in coh_groups:
+                idx_to_remove.append(k)
+        # remove the indexes and take the values as matching list
+        for el in idx_to_remove:
+            del l52_dict[el]
+        l52_matchings = []
+        for k, v in l52_dict.items():
+            for el in v:
+                l52_matchings.append(el)
+
+        return l52_matchings
+
+    def coh_group_cancellation_relation(self, positive_matchings, coh_groups):
+        st = time.time()
+        l42_matchings_set = set(positive_matchings)
+
+        for m in positive_matchings:
+            if m not in coh_groups and m in l42_matchings_set:
+                l42_matchings_set.remove(m)
+
+        difference = list(l42_matchings_set)
+        et = time.time()
+        print("Cancel time: " + str((et - st)))
+        return difference
+
+    def remove_negative_pairs(self, positive_matchings, negative_matchings):
+        st = time.time()
+        l4_matchings_set = set(positive_matchings)
+        total_cancelled = 0
+
+        for m in negative_matchings:
+            if m in positive_matchings:
+                total_cancelled += 1
+                l4_matchings_set.remove(m)
+
+        set_difference = list(l4_matchings_set)
+        et = time.time()
+        print("Cancel time: " + str((et - st)))
+        print('Cancelled: %d pairs' % total_cancelled)
+        return set_difference
+
+    def sem_prop_pipeline(self):
         all_matchings = defaultdict(list)
-        l4_01, l5_01, l42_01, l52_01, l1, l7 = self.__sem_prop_pipeline(
-            om,
-            om.network,
-            om.kr_handlers,
-            store_client,
+        l4, l5, l42, l52, l1, l7 = self.find_matchings(
+            self.ontomatch_api,
+            self.ontomatch_api.network,
+            self.ontomatch_api.kr_handlers,
+            self.store_client,
             sim_threshold_attr=0.2,
             sim_threshold_rel=0.2,
             sem_threshold_attr=0.6,
@@ -171,13 +165,27 @@ class SemProp:
             coh_group_threshold=0.5,
             coh_group_size_cutoff=2,
             sensitivity_cancellation_signal=0.3)
+
+        l42 = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, l42)
+        l52 = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, l52)
+
+        all_matchings[MatchingType.L4_CLASSNAME_RELATIONNAME_SYN] = l4
+        all_matchings[MatchingType.L5_CLASSNAME_ATTRNAME_SYN] = l5
+        all_matchings[MatchingType.L42_CLASSNAME_RELATIONNAME_SEM] = l42
+        all_matchings[MatchingType.L52_CLASSNAME_ATTRNAME_SEM] = l52
         all_matchings[MatchingType.L1_CLASSNAME_ATTRVALUE] = l1
-        all_matchings[MatchingType.L4_CLASSNAME_RELATIONNAME_SYN] = l4_01
-        all_matchings[MatchingType.L5_CLASSNAME_ATTRNAME_SYN] = l5_01
-        all_matchings[MatchingType.L42_CLASSNAME_RELATIONNAME_SEM] = l42_01
-        all_matchings[MatchingType.L52_CLASSNAME_ATTRNAME_SEM] = l52_01
         all_matchings[MatchingType.L7_CLASSNAME_ATTRNAME_FUZZY] = l7
-        self.matchings = matcherlib.combine_matchings(all_matchings)
+
+        matchings = matcherlib.combine_matchings(all_matchings)
+        self.matchings = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, self.list_from_dict(matchings))
+
+    def list_from_dict(self, combined):
+        l = []
+        for k, v in combined.items():
+            matchings = v.get_matchings()
+            for el in matchings:
+                l.append(el)
+        return l
 
 
 def init_test():
@@ -187,4 +195,9 @@ def init_test():
     sp.init_api()
     sp.add_ontology('efo', 'cache_onto/efo.pkl')
     return sp
+
+
+def test():
+    sp = init_test()
+    sp.sem_prop_pipeline()
 

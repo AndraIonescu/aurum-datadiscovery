@@ -5,6 +5,6 @@ ms = semp.sem_prop_pipeline()
 
 f = open("matchings.txt", "w+")
 for m in ms:
-    f.write(m)
+    f.write(str(m))
 f.close()
 

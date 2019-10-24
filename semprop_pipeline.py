@@ -9,6 +9,7 @@ from ontomatch.matcher_lib import MatchingType
 from ontomatch.ss_api import SSAPI
 from ontomatch import matcher_lib as matcherlib
 
+
 # store_results(path_to_results, "best_config", combined_01)
 # print("best_config...OK")
 
@@ -56,59 +57,39 @@ class SemProp:
         print("Add ontology %s" % onto_name)
         self.ontomatch_api.add_krs([(onto_name, path_to_ontology)], parsed=is_parsed)
 
-    def find_syntactic_sim(self, network, kr_handlers, sim_threshold_attr=0.5, sim_threshold_rel=0.5):
-        l4_matchings = matcherlib.find_relation_class_name_matchings(network, kr_handlers,
-                                                                     minhash_sim_threshold=sim_threshold_rel)
-        l5_matchings = matcherlib.find_relation_class_attr_name_matching(network, kr_handlers,
-                                                                         minhash_sim_threshold=sim_threshold_attr)
-        return l4_matchings, l5_matchings
+    def find_matchings(self, sim_threshold_attr=0.5,
+                       sim_threshold_rel=0.5,
+                       sem_threshold_attr=0.5,
+                       sem_threshold_rel=0.5,
+                       coh_group_threshold=0.5,
+                       coh_group_size_cutoff=1,
+                       sensitivity_cancellation_signal=0.4):
 
-    def find_matchings(self, om, network, kr_handlers, store_client, sim_threshold_attr=0.5, sim_threshold_rel=0.5,
-                       sem_threshold_attr=0.5, sem_threshold_rel=0.5, coh_group_threshold=0.5,
-                       coh_group_size_cutoff=1, sensitivity_cancellation_signal=0.4):
-
-        l4_matchings = matcherlib.find_relation_class_name_matchings(network, kr_handlers,
-                                                                     minhash_sim_threshold=sim_threshold_rel)
-        l5_matchings = matcherlib.find_relation_class_attr_name_matching(network, kr_handlers,
-                                                                         minhash_sim_threshold=sim_threshold_attr)
-        l42_matchings, neg_l42_matchings = matcherlib.find_relation_class_name_sem_matchings(network, kr_handlers,
-                                                                                             sem_sim_threshold=sem_threshold_rel,
-                                                                                             sensitivity_neg_signal=sensitivity_cancellation_signal)
-        l52_matchings, neg_l52_matchings = matcherlib.find_relation_class_attr_name_sem_matchings(network,
-                                                                                                  kr_handlers,
-                                                                                                  semantic_sim_threshold=sem_threshold_attr,
-                                                                                                  sensitivity_neg_signal=sensitivity_cancellation_signal)
-        l6_matchings, table_groups = matcherlib.find_sem_coh_matchings(network, kr_handlers,
-                                                                       sem_sim_threshold=coh_group_threshold,
-                                                                       group_size_cutoff=coh_group_size_cutoff)
+        l4_matchings = self.compute_l4_matchings(sim_threshold_rel)
+        l5_matchings = self.compute_l5_matchings(sim_threshold_attr)
+        l42_matchings, neg_l42_matchings = self.compute_l42_matchings(sem_threshold_rel,
+                                                                      sensitivity_cancellation_signal)
+        l52_matchings, neg_l52_matchings = self.compute_l52_matchings(sem_threshold_attr,
+                                                                      sensitivity_cancellation_signal)
+        l6_matchings, table_groups = self.compute_l6_matchings(coh_group_threshold, coh_group_size_cutoff)
 
         print("Remove the SeMa(-) pairs ... ")
         self.l4_matchings = self.remove_negative_pairs(l4_matchings, neg_l42_matchings)
         self.l5_matchings = self.remove_negative_pairs(l5_matchings, neg_l52_matchings)
         self.l42_matchings = self.coh_group_cancellation_relation(l42_matchings, l6_matchings)
         self.l52_matchings = self.coh_group_cancellation_attribute(l52_matchings, l6_matchings)
+        self.l1_matchings = self.compute_content_similarity()
+        self.l7_matchings = self.compute_fuzzy_content_similarity()
 
-        print('Build content similarity ... ')
-        om.priv_build_content_sim(0.6)
-
-        l1_matchings = []
-        for kr_name, kr_handler in kr_handlers.items():
-            kr_class_signatures = kr_handler.get_classes_signatures()
-            l1_matchings += om.compare_content_signatures(kr_name, kr_class_signatures)
-        self.l1_matchings = l1_matchings
-
-        print('Find the fuzzy content similarity ... ')
-        l7_matchings = matcherlib.find_hierarchy_content_fuzzy(kr_handlers, store_client)
-        self.l7_matchings = l7_matchings
-
-        print("l1 total: " + str(len(l1_matchings)))
+        print("l1 total: " + str(len(self.l1_matchings)))
         print("l4 total: " + str(len(l4_matchings)))
         print("l42 total: " + str(len(l42_matchings)))
         print("l5 total: " + str(len(l5_matchings)))
         print("l52 total: " + str(len(l52_matchings)))
-        print("l7 total: " + str(len(l7_matchings)))
+        print("l7 total: " + str(len(self.l7_matchings)))
 
     def coh_group_cancellation_attribute(self, positive_matchings, coh_groups):
+        print("Remove negative pairs - attribute (coh groups) ...")
         st = time.time()
         l52_dict = defaultdict(list)
         for matching in positive_matchings:
@@ -137,6 +118,7 @@ class SemProp:
         return l52_matchings
 
     def coh_group_cancellation_relation(self, positive_matchings, coh_groups):
+        print("Remove negative pairs - relation (coh groups) ...")
         st = time.time()
         l42_matchings_set = set(positive_matchings)
 
@@ -150,6 +132,7 @@ class SemProp:
         return difference
 
     def remove_negative_pairs(self, positive_matchings, negative_matchings):
+        print("Remove negative pairs ...")
         st = time.time()
         l4_matchings_set = set(positive_matchings)
         total_cancelled = 0
@@ -165,13 +148,25 @@ class SemProp:
         print('Cancelled: %d pairs' % total_cancelled)
         return set_difference
 
-    def sem_prop_pipeline(self):
+    def combine_matchings(self):
+        if self.l1_matchings is None or self.l4_matchings is None or \
+                self.l5_matchings is None or self.l42_matchings is None or self.l52_matchings is None or \
+                self.l7_matchings is None:
+            print("Please compute all the matchings necessary matchings")
+            return
+
         all_matchings = defaultdict(list)
+        all_matchings[MatchingType.L4_CLASSNAME_RELATIONNAME_SYN] = self.l4_matchings
+        all_matchings[MatchingType.L5_CLASSNAME_ATTRNAME_SYN] = self.l5_matchings
+        all_matchings[MatchingType.L42_CLASSNAME_RELATIONNAME_SEM] = self.l42_summarized
+        all_matchings[MatchingType.L52_CLASSNAME_ATTRNAME_SEM] = self.l52_summarized
+        all_matchings[MatchingType.L1_CLASSNAME_ATTRVALUE] = self.l1_matchings
+        all_matchings[MatchingType.L7_CLASSNAME_ATTRNAME_FUZZY] = self.l7_matchings
+
+        return all_matchings
+
+    def sem_prop_pipeline(self):
         self.find_matchings(
-            self.ontomatch_api,
-            self.ontomatch_api.network,
-            self.ontomatch_api.kr_handlers,
-            self.store_client,
             sim_threshold_attr=0.2,
             sim_threshold_rel=0.2,
             sem_threshold_attr=0.6,
@@ -184,15 +179,8 @@ class SemProp:
         self.l42_summarized = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, self.l42_matchings)
         self.l52_summarized = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, self.l52_matchings)
 
-        all_matchings[MatchingType.L4_CLASSNAME_RELATIONNAME_SYN] = self.l4_matchings
-        all_matchings[MatchingType.L5_CLASSNAME_ATTRNAME_SYN] = self.l5_matchings
-        all_matchings[MatchingType.L42_CLASSNAME_RELATIONNAME_SEM] = self.l42_summarized
-        all_matchings[MatchingType.L52_CLASSNAME_ATTRNAME_SEM] = self.l52_summarized
-        all_matchings[MatchingType.L1_CLASSNAME_ATTRVALUE] = self.l1_matchings
-        all_matchings[MatchingType.L7_CLASSNAME_ATTRNAME_FUZZY] = self.l7_matchings
-
         print("Combine matchings ... ")
-        matchings = matcherlib.combine_matchings(all_matchings)
+        matchings = matcherlib.combine_matchings(self.combine_matchings())
         print("Apply StructS to the final combination ... ")
         self.matchings = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, self.list_from_dict(matchings))
 
@@ -203,6 +191,102 @@ class SemProp:
             for el in matchings:
                 l.append(el)
         return l
+
+    def compute_l4_matchings(self, sim_threshold_rel):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print("Compute l4 matchings ...")
+        l4_matchings = matcherlib.find_relation_class_name_matchings(self.ontomatch_api.network,
+                                                                     self.ontomatch_api.kr_handlers,
+                                                                     minhash_sim_threshold=sim_threshold_rel)
+        return l4_matchings
+
+    def compute_l5_matchings(self, sim_threshold_attr):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print("Compute l5 matchings ...")
+        l5_matchings = matcherlib.find_relation_class_name_matchings(self.ontomatch_api.network,
+                                                                     self.ontomatch_api.kr_handlers,
+                                                                     minhash_sim_threshold=sim_threshold_attr)
+        return l5_matchings
+
+    def compute_l42_matchings(self, sem_threshold_rel, sensitivity_cancellation_signal):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print("Compute l42 matchings ...")
+        l42_matchings, neg_l42_matchings = matcherlib.find_relation_class_name_sem_matchings(
+            self.ontomatch_api.network,
+            self.ontomatch_api.kr_handlers,
+            sem_sim_threshold=sem_threshold_rel,
+            sensitivity_neg_signal=sensitivity_cancellation_signal)
+
+        return l42_matchings, neg_l42_matchings
+
+    def compute_l52_matchings(self, sem_threshold_attr, sensitivity_cancellation_signal):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print("Compute l52 matchings ...")
+        l52_matchings, neg_l52_matchings = matcherlib.find_relation_class_attr_name_sem_matchings(
+            self.ontomatch_api.network,
+            self.ontomatch_api.kr_handlers,
+            semantic_sim_threshold=sem_threshold_attr,
+            sensitivity_neg_signal=sensitivity_cancellation_signal)
+
+        return l52_matchings, neg_l52_matchings
+
+    def compute_l6_matchings(self, coh_group_threshold, coh_group_size_cutoff):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print("Compute l6 matchings ...")
+        l6_matchings, table_groups = matcherlib.find_sem_coh_matchings(
+            self.ontomatch_api.network,
+            self.ontomatch_api.kr_handlers,
+            sem_sim_threshold=coh_group_threshold,
+            group_size_cutoff=coh_group_size_cutoff)
+
+        return l6_matchings, table_groups
+
+    def compute_content_similarity(self, content_similarity_threshold=0.6):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print('Build content similarity (l1 matchings) ... ')
+        self.ontomatch_api.priv_build_content_sim(content_similarity_threshold)
+
+        l1_matchings = []
+        for kr_name, kr_handler in self.ontomatch_api.kr_handlers.items():
+            kr_class_signatures = kr_handler.get_classes_signatures()
+            l1_matchings += self.ontomatch_api.compare_content_signatures(kr_name, kr_class_signatures)
+
+        return l1_matchings
+
+    def compute_fuzzy_content_similarity(self):
+        if self.ontomatch_api is None:
+            print('API not intialized. ')
+            print('Please init api (e.g. init_api()) and add the ontology (e.g. add_ontology())')
+            return
+
+        print("Compute l7 matchings ...")
+        l7_matchings = matcherlib.find_hierarchy_content_fuzzy(self.ontomatch_api.kr_handlers, self.store_client)
+
+        return l7_matchings
 
 
 def init_test():

@@ -182,7 +182,9 @@ class SemProp:
         print("Combine matchings ... ")
         matchings = matcherlib.combine_matchings(self.combine_matchings())
         print("Apply StructS to the final combination ... ")
-        self.matchings = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, self.list_from_dict(matchings))
+        matchings = matcherlib.summarize_matchings_to_ancestor(self.ontomatch_api, self.list_from_dict(matchings))
+
+        return matchings
 
     def list_from_dict(self, combined):
         l = []
@@ -300,4 +302,4 @@ def init_test():
 
 def test():
     sp = init_test()
-    sp.sem_prop_pipeline()
+    matchings = sp.sem_prop_pipeline()

@@ -86,4 +86,4 @@ data/*
 
 # Store for models and glove
 models/
-ontomatch/glove/
+glove/

@@ -1,4 +1,8 @@
 import time
+import numpy as np
+
+from tqdm import tqdm
+
 from ontomatch import matcher_lib as matcherlib
 from ontomatch.matcher_lib import MatchingType
 from ontomatch import ss_api as SS_API
@@ -378,10 +382,12 @@ def store_results(path, name, matchings):
 def compute_pr_matchings(gt_matchings, matchings):
     gtm = set(gt_matchings)
     total_results = len(matchings)
-    true_positives = 0
-    for el in matchings:
-        if el in gtm:
-            true_positives += 1
+    # true_positives = 0
+    # for el in matchings:
+    #     if el in gtm:
+    #         true_positives += 1
+    true_positives = sum(map(lambda x: x in gtm, matchings))
+
     if total_results == 0:
         precision = 0
     else:
@@ -1015,7 +1021,7 @@ def generate_results_battery_parameters(path_to_serialized_model, onto_name,
     om.add_krs([(onto_name, path_to_ontology)], parsed=True)
 
     # # Build content sim
-    # om.priv_build_content_sim(0.6)
+    om.priv_build_content_sim(0.6)
     #
     # l1_matchings = []
     # for kr_name, kr_handler in om.kr_handlers.items():
@@ -1023,42 +1029,42 @@ def generate_results_battery_parameters(path_to_serialized_model, onto_name,
     #     l1_matchings += om.compare_content_signatures(kr_name, kr_class_signatures)
     #
     # write_matchings_to(path_to_results + 'l1', l1_matchings)
-    #
-    # l7_matchings = matcherlib.find_hierarchy_content_fuzzy(om.kr_handlers, store_client)
-    # write_matchings_to(path_to_results + 'l7', l7_matchings)
-    #
-    # l4_matchings_01 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.1)
-    # write_matchings_to(path_to_results + 'l4_01', l4_matchings_01)
-    # l4_matchings_02 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.2)
-    # write_matchings_to(path_to_results + 'l4_02', l4_matchings_02)
-    # l4_matchings_03 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.3)
-    # write_matchings_to(path_to_results + 'l4_03', l4_matchings_03)
-    #
-    #
-    # l5_matchings_01 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.1)
-    # write_matchings_to(path_to_results + 'l5_01', l5_matchings_01)
 
-    # l5_matchings_02 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.2)
-    # write_matchings_to(path_to_results + 'l5_02', l5_matchings_02)
+    l7_matchings = matcherlib.find_hierarchy_content_fuzzy(om.kr_handlers, store_client)
+    write_matchings_to(path_to_results + 'l7', l7_matchings)
 
-    # l5_matchings_03 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.3)
-    # write_matchings_to(path_to_results + 'l5_03', l5_matchings_03)
-    #
-    # l42_matchings_04, neg_l42_matchings_02 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
-    #                                                                                      sem_sim_threshold=0.4,
-    #                                                                                      negative_signal_threshold=0.2,
-    #                                                                                      add_exact_matches=False,
-    #                                                                                      penalize_unknown_word=True)
-    # write_matchings_to(path_to_results + 'l42_04', l42_matchings_04)
-    # write_matchings_to(path_to_results + 'neg_l42_02', neg_l42_matchings_02)
-    # l42_matchings_04 = None
-    # neg_l42_matchings_02 = None
+    l4_matchings_01 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.1)
+    write_matchings_to(path_to_results + 'l4_01', l4_matchings_01)
+    l4_matchings_02 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.2)
+    write_matchings_to(path_to_results + 'l4_02', l4_matchings_02)
+    l4_matchings_03 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.3)
+    write_matchings_to(path_to_results + 'l4_03', l4_matchings_03)
+
+
+    l5_matchings_01 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.1)
+    write_matchings_to(path_to_results + 'l5_01', l5_matchings_01)
+
+    l5_matchings_02 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.2)
+    write_matchings_to(path_to_results + 'l5_02', l5_matchings_02)
+
+    l5_matchings_03 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.3)
+    write_matchings_to(path_to_results + 'l5_03', l5_matchings_03)
+
+    l42_matchings_04, neg_l42_matchings_02 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
+                                                                                         sem_sim_threshold=0.4,
+                                                                                         negative_signal_threshold=0.2,
+                                                                                         add_exact_matches=False,
+                                                                                         penalize_unknown_word=True)
+    write_matchings_to(path_to_results + 'l42_04', l42_matchings_04)
+    write_matchings_to(path_to_results + 'neg_l42_02', neg_l42_matchings_02)
+    l42_matchings_04 = None
+    neg_l42_matchings_02 = None
 
     l42_matchings_05, neg_l42_matchings_03 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
                                                                                          sem_sim_threshold=0.5,
@@ -1068,33 +1074,33 @@ def generate_results_battery_parameters(path_to_serialized_model, onto_name,
     write_matchings_to(path_to_results + 'l42_05', l42_matchings_05)
     write_matchings_to(path_to_results + 'neg_l42_03', neg_l42_matchings_03)
 
-    # l42_matchings_06, neg_l42_matchings_04 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
-    #                                                                                      sem_sim_threshold=0.6,
-    #                                                                                      negative_signal_threshold=0.4,
-    #                                                                                      add_exact_matches=False,
-    #                                                                                      penalize_unknown_word=True)
-    # write_matchings_to(path_to_results + 'l42_06', l42_matchings_06)
-    # write_matchings_to(path_to_results + 'neg_l42_04', neg_l42_matchings_04)
-    # l42_matchings_06 = None
-    # neg_l42_matchings_04 = None
+    l42_matchings_06, neg_l42_matchings_04 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
+                                                                                         sem_sim_threshold=0.6,
+                                                                                         negative_signal_threshold=0.4,
+                                                                                         add_exact_matches=False,
+                                                                                         penalize_unknown_word=True)
+    write_matchings_to(path_to_results + 'l42_06', l42_matchings_06)
+    write_matchings_to(path_to_results + 'neg_l42_04', neg_l42_matchings_04)
+    l42_matchings_06 = None
+    neg_l42_matchings_04 = None
 
-    # l42_matchings_07, neg_l42_matchings_05 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
-    #                                                                                      sem_sim_threshold=0.7,
-    #                                                                                      negative_signal_threshold=0.5,
-    #                                                                                      add_exact_matches=False,
-    #                                                                                      penalize_unknown_word=True)
-    # write_matchings_to(path_to_results + 'l42_07', l42_matchings_07)
-    # write_matchings_to(path_to_results + 'neg_l42_05', neg_l42_matchings_05)
+    l42_matchings_07, neg_l42_matchings_05 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
+                                                                                         sem_sim_threshold=0.7,
+                                                                                         negative_signal_threshold=0.5,
+                                                                                         add_exact_matches=False,
+                                                                                         penalize_unknown_word=True)
+    write_matchings_to(path_to_results + 'l42_07', l42_matchings_07)
+    write_matchings_to(path_to_results + 'neg_l42_05', neg_l42_matchings_05)
 
-    # l52_matchings_04, neg_l52_matchings_02 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
-    #                                                                                       semantic_sim_threshold=0.4,
-    #                                                                                       negative_signal_threshold=0.2,
-    #                                                                                       add_exact_matches=False,
-    #                                                                                       penalize_unknown_word=True)
-    # write_matchings_to(path_to_results + 'l52_04', l52_matchings_04)
-    # write_matchings_to(path_to_results + 'neg_l52_02', neg_l52_matchings_02)
-    # l52_matchings_04 = None
-    # neg_l52_matchings_02 = None
+    l52_matchings_04, neg_l52_matchings_02 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
+                                                                                          semantic_sim_threshold=0.4,
+                                                                                          negative_signal_threshold=0.2,
+                                                                                          add_exact_matches=False,
+                                                                                          penalize_unknown_word=True)
+    write_matchings_to(path_to_results + 'l52_04', l52_matchings_04)
+    write_matchings_to(path_to_results + 'neg_l52_02', neg_l52_matchings_02)
+    l52_matchings_04 = None
+    neg_l52_matchings_02 = None
 
     l52_matchings_05, neg_l52_matchings_03 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
                                                                                           semantic_sim_threshold=0.5,
@@ -1104,67 +1110,67 @@ def generate_results_battery_parameters(path_to_serialized_model, onto_name,
     write_matchings_to(path_to_results + 'l52_05', l52_matchings_05)
     write_matchings_to(path_to_results + 'neg_l52_03', neg_l52_matchings_03)
 
-    # l52_matchings_06, neg_l52_matchings_04 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
-    #                                                                                       semantic_sim_threshold=0.6,
-    #                                                                                       negative_signal_threshold=0.4,
-    #                                                                                         add_exact_matches=False,
-    #                                                                                         penalize_unknown_word=True)
-    # write_matchings_to(path_to_results + 'l52_06', l52_matchings_06)
-    # write_matchings_to(path_to_results + 'neg_l52_04', neg_l52_matchings_04)
-    # l52_matchings_06 = None
-    # neg_l52_matchings_04 = None
+    l52_matchings_06, neg_l52_matchings_04 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
+                                                                                          semantic_sim_threshold=0.6,
+                                                                                          negative_signal_threshold=0.4,
+                                                                                            add_exact_matches=False,
+                                                                                            penalize_unknown_word=True)
+    write_matchings_to(path_to_results + 'l52_06', l52_matchings_06)
+    write_matchings_to(path_to_results + 'neg_l52_04', neg_l52_matchings_04)
+    l52_matchings_06 = None
+    neg_l52_matchings_04 = None
 
-    # l52_matchings_07, neg_l52_matchings_05 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
-    #                                                                                       semantic_sim_threshold=0.7,
-    #                                                                                       negative_signal_threshold=0.5,
-    #                                                                                       add_exact_matches=False,
-    #                                                                                       penalize_unknown_word=True)
-    # write_matchings_to(path_to_results + 'l52_07', l52_matchings_07)
-    # write_matchings_to(path_to_results + 'neg_l52_05', neg_l52_matchings_05)
+    l52_matchings_07, neg_l52_matchings_05 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
+                                                                                          semantic_sim_threshold=0.7,
+                                                                                          negative_signal_threshold=0.5,
+                                                                                          add_exact_matches=False,
+                                                                                          penalize_unknown_word=True)
+    write_matchings_to(path_to_results + 'l52_07', l52_matchings_07)
+    write_matchings_to(path_to_results + 'neg_l52_05', neg_l52_matchings_05)
 
-    # l6_matchings_03_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.3,
-    #                                                                group_size_cutoff=1)
-    # write_matchings_to(path_to_results + 'l6_03_1', l6_matchings_03_1)
-    #
-    # l6_matchings_03_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.3,
-    #                                                                group_size_cutoff=2)
-    # write_matchings_to(path_to_results + 'l6_03_2', l6_matchings_03_2)
-    #
-    # l6_matchings_03_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.3,
-    #                                                                group_size_cutoff=3)
-    # write_matchings_to(path_to_results + 'l6_03_3', l6_matchings_03_3)
-    #
-    # l6_matchings_04_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.4,
-    #                                                                group_size_cutoff=1)
-    # write_matchings_to(path_to_results + 'l6_04_1', l6_matchings_04_1)
-    #
-    # l6_matchings_04_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.4,
-    #                                                                group_size_cutoff=2)
-    # write_matchings_to(path_to_results + 'l6_04_2', l6_matchings_04_2)
-    #
-    # l6_matchings_04_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.4,
-    #                                                                group_size_cutoff=3)
-    # write_matchings_to(path_to_results + 'l6_04_3', l6_matchings_04_3)
-    #
-    # l6_matchings_05_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.5,
-    #                                                                group_size_cutoff=1)
-    # write_matchings_to(path_to_results + 'l6_05_1', l6_matchings_05_1)
-    #
-    # l6_matchings_05_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.5,
-    #                                                                group_size_cutoff=2)
-    # write_matchings_to(path_to_results + 'l6_05_2', l6_matchings_05_2)
-    # l6_matchings_05_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                sem_sim_threshold=0.5,
-    #                                                                group_size_cutoff=3)
-    # write_matchings_to(path_to_results + 'l6_05_3', l6_matchings_05_3)
+    l6_matchings_03_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.3,
+                                                                   group_size_cutoff=1)
+    write_matchings_to(path_to_results + 'l6_03_1', l6_matchings_03_1)
+
+    l6_matchings_03_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.3,
+                                                                   group_size_cutoff=2)
+    write_matchings_to(path_to_results + 'l6_03_2', l6_matchings_03_2)
+
+    l6_matchings_03_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.3,
+                                                                   group_size_cutoff=3)
+    write_matchings_to(path_to_results + 'l6_03_3', l6_matchings_03_3)
+
+    l6_matchings_04_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.4,
+                                                                   group_size_cutoff=1)
+    write_matchings_to(path_to_results + 'l6_04_1', l6_matchings_04_1)
+
+    l6_matchings_04_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.4,
+                                                                   group_size_cutoff=2)
+    write_matchings_to(path_to_results + 'l6_04_2', l6_matchings_04_2)
+
+    l6_matchings_04_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.4,
+                                                                   group_size_cutoff=3)
+    write_matchings_to(path_to_results + 'l6_04_3', l6_matchings_04_3)
+
+    l6_matchings_05_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.5,
+                                                                   group_size_cutoff=1)
+    write_matchings_to(path_to_results + 'l6_05_1', l6_matchings_05_1)
+
+    l6_matchings_05_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.5,
+                                                                   group_size_cutoff=2)
+    write_matchings_to(path_to_results + 'l6_05_2', l6_matchings_05_2)
+    l6_matchings_05_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                   sem_sim_threshold=0.5,
+                                                                   group_size_cutoff=3)
+    write_matchings_to(path_to_results + 'l6_05_3', l6_matchings_05_3)
 
 
 def generate_results_battery_parameters2(path_to_serialized_model, onto_name,
@@ -1191,52 +1197,52 @@ def generate_results_battery_parameters2(path_to_serialized_model, onto_name,
 
     # Build content sim
 
-    # l4_matchings_04 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.4)
-    # write_matchings_to(path_to_results + 'l4_04', l4_matchings_04)
-    # l4_matchings_05 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.5)
-    # write_matchings_to(path_to_results + 'l4_05', l4_matchings_05)
-    #
-    # l4_matchings_06 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.6)
-    # write_matchings_to(path_to_results + 'l4_06', l4_matchings_06)
-    #
-    # l4_matchings_07 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.7)
-    # write_matchings_to(path_to_results + 'l4_07', l4_matchings_07)
-    #
-    # l4_matchings_08 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                             minhash_sim_threshold=0.8)
-    # write_matchings_to(path_to_results + 'l4_08', l4_matchings_08)
-    #
-    # l4_matchings_09 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.9)
-    # write_matchings_to(path_to_results + 'l4_09', l4_matchings_09)
-    #
-    # l5_matchings_04 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.4)
-    # write_matchings_to(path_to_results + 'l5_04', l5_matchings_04)
-    #
-    # l5_matchings_05 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.5)
-    # write_matchings_to(path_to_results + 'l5_05', l5_matchings_05)
-    #
-    # l5_matchings_06 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.6)
-    # write_matchings_to(path_to_results + 'l5_06', l5_matchings_06)
-    #
-    # l5_matchings_07 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                     minhash_sim_threshold=0.7)
-    # write_matchings_to(path_to_results + 'l5_07', l5_matchings_07)
-    #
-    # l5_matchings_08 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.8)
-    # write_matchings_to(path_to_results + 'l5_08', l5_matchings_08)
-    #
-    # l5_matchings_09 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
-    #                                                                 minhash_sim_threshold=0.9)
-    # write_matchings_to(path_to_results + 'l5_09', l5_matchings_09)
+    l4_matchings_04 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.4)
+    write_matchings_to(path_to_results + 'l4_04', l4_matchings_04)
+    l4_matchings_05 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.5)
+    write_matchings_to(path_to_results + 'l4_05', l4_matchings_05)
+
+    l4_matchings_06 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.6)
+    write_matchings_to(path_to_results + 'l4_06', l4_matchings_06)
+
+    l4_matchings_07 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.7)
+    write_matchings_to(path_to_results + 'l4_07', l4_matchings_07)
+
+    l4_matchings_08 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                minhash_sim_threshold=0.8)
+    write_matchings_to(path_to_results + 'l4_08', l4_matchings_08)
+
+    l4_matchings_09 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.9)
+    write_matchings_to(path_to_results + 'l4_09', l4_matchings_09)
+
+    l5_matchings_04 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.4)
+    write_matchings_to(path_to_results + 'l5_04', l5_matchings_04)
+
+    l5_matchings_05 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.5)
+    write_matchings_to(path_to_results + 'l5_05', l5_matchings_05)
+
+    l5_matchings_06 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.6)
+    write_matchings_to(path_to_results + 'l5_06', l5_matchings_06)
+
+    l5_matchings_07 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                        minhash_sim_threshold=0.7)
+    write_matchings_to(path_to_results + 'l5_07', l5_matchings_07)
+
+    l5_matchings_08 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.8)
+    write_matchings_to(path_to_results + 'l5_08', l5_matchings_08)
+
+    l5_matchings_09 = matcherlib.find_relation_class_attr_name_matching(network, om.kr_handlers,
+                                                                    minhash_sim_threshold=0.9)
+    write_matchings_to(path_to_results + 'l5_09', l5_matchings_09)
 
     l42_matchings_08, neg_l42_matchings_01 = matcherlib.find_relation_class_name_sem_matchings(network, om.kr_handlers,
                                                                                                sem_sim_threshold=0.8,
@@ -1298,50 +1304,50 @@ def generate_results_battery_parameters2(path_to_serialized_model, onto_name,
     l52_matchings_03 = None
     neg_l52_matchings_07 = None
 
-    # l6_matchings_02_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.2,
-    #                                                                     group_size_cutoff=1)
-    # write_matchings_to(path_to_results + 'l6_02_1', l6_matchings_02_1)
-    #
-    # l6_matchings_02_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.2,
-    #                                                                     group_size_cutoff=2)
-    # write_matchings_to(path_to_results + 'l6_02_2', l6_matchings_02_2)
-    #
-    # l6_matchings_02_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.2,
-    #                                                                     group_size_cutoff=3)
-    # write_matchings_to(path_to_results + 'l6_02_3', l6_matchings_02_3)
-    #
-    # l6_matchings_06_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.6,
-    #                                                                     group_size_cutoff=1)
-    # write_matchings_to(path_to_results + 'l6_06_1', l6_matchings_06_1)
-    #
-    # l6_matchings_06_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.6,
-    #                                                                     group_size_cutoff=2)
-    # write_matchings_to(path_to_results + 'l6_06_2', l6_matchings_06_2)
-    #
-    # l6_matchings_06_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.6,
-    #                                                                     group_size_cutoff=3)
-    # write_matchings_to(path_to_results + 'l6_06_3', l6_matchings_06_3)
-    #
-    # l6_matchings_07_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.7,
-    #                                                                     group_size_cutoff=1)
-    # write_matchings_to(path_to_results + 'l6_07_1', l6_matchings_07_1)
-    #
-    # l6_matchings_07_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.7,
-    #                                                                     group_size_cutoff=2)
-    # write_matchings_to(path_to_results + 'l6_07_2', l6_matchings_07_2)
-    #
-    # l6_matchings_07_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
-    #                                                                     sem_sim_threshold=0.7,
-    #                                                                     group_size_cutoff=3)
-    # write_matchings_to(path_to_results + 'l6_07_3', l6_matchings_07_3)
+    l6_matchings_02_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.2,
+                                                                        group_size_cutoff=1)
+    write_matchings_to(path_to_results + 'l6_02_1', l6_matchings_02_1)
+
+    l6_matchings_02_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.2,
+                                                                        group_size_cutoff=2)
+    write_matchings_to(path_to_results + 'l6_02_2', l6_matchings_02_2)
+
+    l6_matchings_02_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.2,
+                                                                        group_size_cutoff=3)
+    write_matchings_to(path_to_results + 'l6_02_3', l6_matchings_02_3)
+
+    l6_matchings_06_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.6,
+                                                                        group_size_cutoff=1)
+    write_matchings_to(path_to_results + 'l6_06_1', l6_matchings_06_1)
+
+    l6_matchings_06_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.6,
+                                                                        group_size_cutoff=2)
+    write_matchings_to(path_to_results + 'l6_06_2', l6_matchings_06_2)
+
+    l6_matchings_06_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.6,
+                                                                        group_size_cutoff=3)
+    write_matchings_to(path_to_results + 'l6_06_3', l6_matchings_06_3)
+
+    l6_matchings_07_1, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.7,
+                                                                        group_size_cutoff=1)
+    write_matchings_to(path_to_results + 'l6_07_1', l6_matchings_07_1)
+
+    l6_matchings_07_2, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.7,
+                                                                        group_size_cutoff=2)
+    write_matchings_to(path_to_results + 'l6_07_2', l6_matchings_07_2)
+
+    l6_matchings_07_3, table_groups = matcherlib.find_sem_coh_matchings(network, om.kr_handlers,
+                                                                        sem_sim_threshold=0.7,
+                                                                        group_size_cutoff=3)
+    write_matchings_to(path_to_results + 'l6_07_3', l6_matchings_07_3)
 
 
 def read(path):
@@ -1571,18 +1577,20 @@ def local_test(path_to_raw_data, path_to_ground_truth_file):
     l7 = read(path_to_raw_data + "l7")
     l4 = read(path_to_raw_data + "l4_02")  #l4_02 0.015/0.46 - 0.33/0.38 (summary=2)
     l5 = read(path_to_raw_data + "l5_02")  #l5_02
-    l42 = read(path_to_raw_data + "l42_05")  #l42_05
-    l52 = read(path_to_raw_data + "l52_05")  #l52_05
+    l42 = read(path_to_raw_data + "l42_07")  #l42_05
+    l52 = read(path_to_raw_data + "l52_06")  #l52_05
     nl42 = read(path_to_raw_data + "neg_l42_05")  #neg_l42_05
     nl52 = read(path_to_raw_data + "neg_l52_05")  #neg_l42_05
+    l6 = read(path_to_raw_data + "l6_05_2")  #neg_l42_05
 
     #combined_list, combined_sum = syn_and_we(l4, l5, l42, l52, "syn_and_we_02_03")
-    #combined_list, combined_sum = test1("test1", l4, l5, nl42=nl42, nl52=nl52, l42=l42, l52=l52, l1=l1, l7=l7)
+    # combined_list, combined_sum = test1("test1", l4, l5, nl42=nl42, nl52=nl52, l42=l42, l52=l52, l1=l1, l7=l7)
 
     # combined_list, combined_sum = test1("test1", l4=l4, l5=l5, nl42=[], nl52=[], l42=[], l52=[], l1=[], l7=[])
     # combined_list, combined_sum = test1("test1", l4=l4, l5=l5, nl42=nl42, nl52=nl52, l42=[], l52=[], l1=[], l7=[])
     # combined_list, combined_sum = test1("test1", l4=l4, l5=l5, nl42=nl42, nl52=nl52, l42=l42, l52=l52, l1=[], l7=[])
-    combined_list, combined_sum = test1("test1", l4=l4, l5=l5, nl42=nl42, nl52=nl52, l42=l42, l52=l52, l1=l1, l7=l7)
+    combined_list, combined_sum = test1("test1", l4=l4, l5=l5, nl42=nl42, nl52=nl52,
+                                        l42=l42, l52=l52, l1=l1, l7=l7, l6=l6)
 
     print("num combined_list: " + str(len(combined_list)))
     for m in combined_list:
@@ -1628,74 +1636,6 @@ def local_test(path_to_raw_data, path_to_ground_truth_file):
 
 
 def combine_and_report_results(path_to_raw_data, path_to_ground_truth_file):
-
-    l1_matchings = read(path_to_raw_data + "l1")
-    l7_matchings = read(path_to_raw_data + "l7")
-    l4_matchings_01 = read(path_to_raw_data + "l4_01")
-    l4_matchings_02 = read(path_to_raw_data + "l4_02")
-    l4_matchings_03 = read(path_to_raw_data + "l4_03")
-    l4_matchings_04 = read(path_to_raw_data + "l4_04")
-    l4_matchings_05 = read(path_to_raw_data + "l4_05")
-    l4_matchings_06 = read(path_to_raw_data + "l4_06")
-    l4_matchings_07 = read(path_to_raw_data + "l4_07")
-    l4_matchings_08 = read(path_to_raw_data + "l4_08")
-    l4_matchings_09 = read(path_to_raw_data + "l4_09")
-    l5_matchings_01 = read(path_to_raw_data + "l5_01")
-    l5_matchings_02 = read(path_to_raw_data + "l5_02")
-    l5_matchings_03 = read(path_to_raw_data + "l5_03")
-    l5_matchings_04 = read(path_to_raw_data + "l5_04")
-    l5_matchings_05 = read(path_to_raw_data + "l5_05")
-    l5_matchings_06 = read(path_to_raw_data + "l5_06")
-    l5_matchings_07 = read(path_to_raw_data + "l5_07")
-    l5_matchings_08 = read(path_to_raw_data + "l5_08")
-    l5_matchings_09 = read(path_to_raw_data + "l5_09")
-    l42_matchings_03 = read(path_to_raw_data + "l42_03")
-    l42_matchings_04 = read(path_to_raw_data + "l42_04")
-    l42_matchings_05 = read(path_to_raw_data + "l42_05")
-    l42_matchings_06 = read(path_to_raw_data + "l42_06")
-    l42_matchings_07 = read(path_to_raw_data + "l42_07")
-    l42_matchings_08 = read(path_to_raw_data + "l42_08")
-    l42_matchings_09 = read(path_to_raw_data + "l42_09")
-    l52_matchings_03 = read(path_to_raw_data + "l52_03")
-    l52_matchings_04 = read(path_to_raw_data + "l52_04")
-    l52_matchings_05 = read(path_to_raw_data + "l52_05")
-    l52_matchings_06 = read(path_to_raw_data + "l52_06")
-    l52_matchings_07 = read(path_to_raw_data + "l52_07")
-    l52_matchings_08 = read(path_to_raw_data + "l52_08")
-    l52_matchings_09 = read(path_to_raw_data + "l52_09")
-    neg_l42_01 = read(path_to_raw_data + "neg_l42_01")
-    neg_l42_02 = read(path_to_raw_data + "neg_l42_02")
-    neg_l42_03 = read(path_to_raw_data + "neg_l42_03")
-    neg_l42_04 = read(path_to_raw_data + "neg_l42_04")
-    neg_l42_05 = read(path_to_raw_data + "neg_l42_05")
-    neg_l42_06 = read(path_to_raw_data + "neg_l42_06")
-    neg_l42_07 = read(path_to_raw_data + "neg_l42_07")
-    neg_l52_01 = read(path_to_raw_data + "neg_l52_01")
-    neg_l52_02 = read(path_to_raw_data + "neg_l52_02")
-    # neg_l52_03 = read(path_to_raw_data + "neg_l52_03")
-    # neg_l52_04 = read(path_to_raw_data + "neg_l52_04")
-    # neg_l52_05 = read(path_to_raw_data + "neg_l52_05")
-    # neg_l52_06 = read(path_to_raw_data + "neg_l52_06")
-    # neg_l52_07 = read(path_to_raw_data + "neg_l52_07")
-    l6_02_1 = read(path_to_raw_data + "l6_02_1")
-    l6_02_2 = read(path_to_raw_data + "l6_02_1")
-    l6_02_3 = read(path_to_raw_data + "l6_02_1")
-    l6_03_1 = read(path_to_raw_data + "l6_03_1")
-    l6_03_2 = read(path_to_raw_data + "l6_03_1")
-    l6_03_3 = read(path_to_raw_data + "l6_03_1")
-    l6_04_1 = read(path_to_raw_data + "l6_04_1")
-    l6_04_2 = read(path_to_raw_data + "l6_04_1")
-    l6_04_3 = read(path_to_raw_data + "l6_04_1")
-    l6_05_1 = read(path_to_raw_data + "l6_05_1")
-    l6_05_2 = read(path_to_raw_data + "l6_05_1")
-    l6_05_3 = read(path_to_raw_data + "l6_05_1")
-    l6_06_1 = read(path_to_raw_data + "l6_06_1")
-    l6_06_2 = read(path_to_raw_data + "l6_06_1")
-    l6_06_3 = read(path_to_raw_data + "l6_06_1")
-    l6_07_1 = read(path_to_raw_data + "l6_07_1")
-    l6_07_2 = read(path_to_raw_data + "l6_07_1")
-    l6_07_3 = read(path_to_raw_data + "l6_07_1")
-
 
     # Getting ground truth
     with open(path_to_ground_truth_file, 'r') as gt:
@@ -1833,7 +1773,8 @@ def combine_and_report_results(path_to_raw_data, path_to_ground_truth_file):
         print(name + ", " + str(precision) + ", " + str(recall))
         print(name + "_sum, " + str(precision_sum) + ", " + str(recall_sum))
 
-    def syn_we_c4_c5_c6(l4, l5, l6, l42, l52, nl42, nl52, name):
+    def syn_we_c4_c5_c6(l4, l5, l6, l42, l52, nl42, nl52, name, cuttingRatio, summaryT):
+        print("Started computation ... ")
         l4_dict = dict()
         for matching in l4:
             l4_dict[matching] = 1
@@ -1842,6 +1783,7 @@ def combine_and_report_results(path_to_raw_data, path_to_ground_truth_file):
             if m in l4_dict:
                 total_cancelled += 1
                 l4.remove(m)
+        l4_dict = None
 
         l5_dict = dict()
         for matching in l5:
@@ -1851,6 +1793,7 @@ def combine_and_report_results(path_to_raw_data, path_to_ground_truth_file):
             if m in l5_dict:
                 total_cancelled += 1
                 l5.remove(m)
+        l5_dict = None
 
         l6_dict = dict()
         for matching in l6:
@@ -1865,17 +1808,21 @@ def combine_and_report_results(path_to_raw_data, path_to_ground_truth_file):
         print("rem-l42: " + str(removed_l42))
 
         # curate l52 with l6
+        # (('chemical', 'activity_stds_lookup', 'std_act_id'), ('efo', 'Metabolomic Profiling'))
+        # (('chemical', 'activity_stds_lookup', '_'), ('efo', 'Experimental Factor'))
         removed_l52 = 0
-        for m in l52.keys():
-            if m not in l6_dict:
-                db_to_remove, rel_to_remove, _ = m[0]
-                for el in l52:
-                    sch, cla = el
-                    db, relation, attr = sch
-                    if db == db_to_remove and relation == rel_to_remove:
-                        if el in l52:
-                            removed_l52 += 1
-                            l52.remove(el)
+        for m in l52:
+            db, relation, attr = m[0]
+            el = ((db, relation, '_'), m[1])
+            if el not in l6_dict:
+                # db_to_remove, rel_to_remove, _ = m[0]
+                # for el in l52:
+                #     sch, cla = el
+                #     db, relation, attr = sch
+                #     if db == db_to_remove and relation == rel_to_remove:
+                #         if el in l52:
+                removed_l52 += 1
+                l52.remove(m)
         print("rem-l52: " + str(removed_l52))
 
         all_matchings = defaultdict(list)
@@ -1886,965 +1833,62 @@ def combine_and_report_results(path_to_raw_data, path_to_ground_truth_file):
         combined = matcherlib.combine_matchings(all_matchings)
         combined_list = list_from_dict(combined)
 
-        print(str(len(combined_list)))
+        print("Compute precision/recall: {}".format(str(len(combined_list))))
         precision, recall = compute_pr_matchings(ground_truth_matchings, combined_list)
-
-        combined_sum = matcherlib.summarize_matchings_to_ancestor(om.kr_handlers["efo"], combined_list)
+        print("StructS ... ")
+        combined_sum = matcherlib.summarize_matchings_to_ancestor(om, combined_list,
+                                                                  threshold_to_summarize=summaryT,
+                                                                  summary_ratio=cuttingRatio)
         precision_sum, recall_sum = compute_pr_matchings(ground_truth_matchings, combined_sum)
         print(name + ", " + str(precision) + ", " + str(recall))
         print(name + "_sum, " + str(precision_sum) + ", " + str(recall_sum))
 
+        return precision, recall, precision_sum, recall_sum
+
     print("Syn only")
     # l4 and l5 01
-    syn_only(l4_matchings_01, l5_matchings_01, "syn_01")
-    syn_only(l4_matchings_02, l5_matchings_02, "syn_02")
-    syn_only(l4_matchings_03, l5_matchings_03, "syn_03")
-    syn_only(l4_matchings_04, l5_matchings_04, "syn_04")
-    syn_only(l4_matchings_05, l5_matchings_05, "syn_05")
-    syn_only(l4_matchings_06, l5_matchings_06, "syn_06")
-    syn_only(l4_matchings_07, l5_matchings_07, "syn_07")
-    syn_only(l4_matchings_08, l5_matchings_08, "syn_08")
-    syn_only(l4_matchings_09, l5_matchings_09, "syn_09")
+
 
     # syn and we
 
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, "syn_and_we_01_03")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, "syn_and_we_02_03")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, "syn_and_we_03_03")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, "syn_and_we_04_03")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, "syn_and_we_05_03")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, "syn_and_we_06_03")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, "syn_and_we_07_03")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, "syn_and_we_08_03")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, "syn_and_we_09_03")
-
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, "syn_and_we_01_04")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, "syn_and_we_02_04")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, "syn_and_we_03_04")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, "syn_and_we_04_04")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, "syn_and_we_05_04")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, "syn_and_we_06_04")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, "syn_and_we_07_04")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, "syn_and_we_08_04")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, "syn_and_we_09_04")
-
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_05, l52_matchings_05, "syn_and_we_01_05")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_05, l52_matchings_05, "syn_and_we_02_05")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_05, l52_matchings_05, "syn_and_we_03_05")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_05, l52_matchings_05, "syn_and_we_04_05")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_05, l52_matchings_05, "syn_and_we_05_05")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_05, l52_matchings_05, "syn_and_we_06_05")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_05, l52_matchings_05, "syn_and_we_07_05")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_05, l52_matchings_05, "syn_and_we_08_05")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_05, l52_matchings_05, "syn_and_we_09_05")
-
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_06, l52_matchings_06, "syn_and_we_01_06")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_06, l52_matchings_06, "syn_and_we_02_06")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_06, l52_matchings_06, "syn_and_we_03_06")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_06, l52_matchings_06, "syn_and_we_04_06")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_06, l52_matchings_06, "syn_and_we_05_06")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_06, l52_matchings_06, "syn_and_we_06_06")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_06, l52_matchings_06, "syn_and_we_07_06")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_06, l52_matchings_06, "syn_and_we_08_06")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_06, l52_matchings_06, "syn_and_we_09_06")
-
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_07, l52_matchings_07, "syn_and_we_01_07")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_07, l52_matchings_07, "syn_and_we_02_07")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_07, l52_matchings_07, "syn_and_we_03_07")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_07, l52_matchings_07, "syn_and_we_04_07")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_07, l52_matchings_07, "syn_and_we_05_07")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_07, l52_matchings_07, "syn_and_we_06_07")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_07, l52_matchings_07, "syn_and_we_07_07")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_07, l52_matchings_07, "syn_and_we_08_07")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_07, l52_matchings_07, "syn_and_we_09_07")
-
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_08, l52_matchings_08, "syn_and_we_01_08")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_08, l52_matchings_08, "syn_and_we_02_08")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_08, l52_matchings_08, "syn_and_we_03_08")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_08, l52_matchings_08, "syn_and_we_04_08")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_08, l52_matchings_08, "syn_and_we_05_08")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_08, l52_matchings_08, "syn_and_we_06_08")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_08, l52_matchings_08, "syn_and_we_07_08")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_08, l52_matchings_08, "syn_and_we_08_08")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_08, l52_matchings_08, "syn_and_we_09_08")
-
-    syn_and_we(l4_matchings_01, l5_matchings_01, l42_matchings_09, l52_matchings_09, "syn_and_we_01_09")
-    syn_and_we(l4_matchings_02, l5_matchings_02, l42_matchings_09, l52_matchings_09, "syn_and_we_02_09")
-    syn_and_we(l4_matchings_03, l5_matchings_03, l42_matchings_09, l52_matchings_09, "syn_and_we_03_09")
-    syn_and_we(l4_matchings_04, l5_matchings_04, l42_matchings_09, l52_matchings_09, "syn_and_we_04_09")
-    syn_and_we(l4_matchings_05, l5_matchings_05, l42_matchings_09, l52_matchings_09, "syn_and_we_05_09")
-    syn_and_we(l4_matchings_06, l5_matchings_06, l42_matchings_09, l52_matchings_09, "syn_and_we_06_09")
-    syn_and_we(l4_matchings_07, l5_matchings_07, l42_matchings_09, l52_matchings_09, "syn_and_we_07_09")
-    syn_and_we(l4_matchings_08, l5_matchings_08, l42_matchings_09, l52_matchings_09, "syn_and_we_08_09")
-    syn_and_we(l4_matchings_09, l5_matchings_09, l42_matchings_09, l52_matchings_09, "syn_and_we_09_09")
-
-    # syn and we c4
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_01_03_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_02_03_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_03_03_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_04_03_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_05_03_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_06_03_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_07_03_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_08_03_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_01, "basic_09_03_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_01_03_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_02_03_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_03_03_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_04_03_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_05_03_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_06_03_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_07_03_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_08_03_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_02, "basic_09_03_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_01_03_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_02_03_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_03_03_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_04_03_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_05_03_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_06_03_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_07_03_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_08_03_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_03, "basic_09_03_c4_3")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_01_03_c4_4")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_02_03_c4_4")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_03_03_c4_4")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_04_03_c4_4")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_05_03_c4_4")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_06_03_c4_4")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_07_03_c4_4")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_08_03_c4_4")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_04, "basic_09_03_c4_4")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_01_03_c4_5")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_02_03_c4_5")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_03_03_c4_5")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_04_03_c4_5")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_05_03_c4_5")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_06_03_c4_5")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_07_03_c4_5")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_08_03_c4_5")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_05, "basic_09_03_c4_5")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_01_03_c4_6")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_02_03_c4_6")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_03_03_c4_6")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_04_03_c4_6")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_05_03_c4_6")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_06_03_c4_6")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_07_03_c4_6")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_08_03_c4_6")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_06, "basic_09_03_c4_6")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_01_03_c4_7")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_02_03_c4_7")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_03_03_c4_7")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_04_03_c4_7")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_05_03_c4_7")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_06_03_c4_7")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_07_03_c4_7")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_08_03_c4_7")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_07, "basic_09_03_c4_7")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_01_04_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_02_04_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_03_04_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_04_04_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_05_04_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_06_04_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_07_04_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_08_04_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_01, "basic_09_04_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_01_04_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_02_04_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_03_04_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_04_04_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_05_04_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_06_04_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_07_04_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_08_04_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_02, "basic_09_04_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_01_04_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_02_04_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_03_04_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_04_04_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_05_04_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_06_04_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_07_04_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_08_04_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_03, "basic_09_04_c4_3")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_01_04_c4_4")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_02_04_c4_4")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_03_04_c4_4")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_04_04_c4_4")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_05_04_c4_4")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_06_04_c4_4")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_07_04_c4_4")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_08_04_c4_4")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_04, "basic_09_04_c4_4")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_01_04_c4_5")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_02_04_c4_5")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_03_04_c4_5")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_04_04_c4_5")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_05_04_c4_5")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_06_04_c4_5")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_07_04_c4_5")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_08_04_c4_5")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_05, "basic_09_04_c4_5")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_01_04_c4_6")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_02_04_c4_6")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_03_04_c4_6")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_04_04_c4_6")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_05_04_c4_6")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_06_04_c4_6")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_07_04_c4_6")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_08_04_c4_6")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_06, "basic_09_04_c4_6")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_01_04_c4_7")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_02_04_c4_7")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_03_04_c4_7")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_04_04_c4_7")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_05_04_c4_7")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_06_04_c4_7")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_07_04_c4_7")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_08_04_c4_7")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_07, "basic_09_04_c4_7")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_01_05_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_02_05_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_03_05_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_04_05_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_05_05_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_06_05_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_07_05_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_08_05_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_05, l52_matchings_05, neg_l42_01, "basic_09_05_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_01_05_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_02_05_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_03_05_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_04_05_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_05_05_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_06_05_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_07_05_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_08_05_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_05, l52_matchings_05, neg_l42_02, "basic_09_05_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_01_05_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_02_05_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_03_05_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_04_05_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_05_05_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_06_05_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_07_05_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_08_05_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_05, l52_matchings_05, neg_l42_03, "basic_09_05_c4_3")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_01_06_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_02_06_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_03_06_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_04_06_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_05_06_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_06_06_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_07_06_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_08_06_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_06, l52_matchings_06, neg_l42_01, "basic_09_06_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_01_06_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_02_06_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_03_06_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_04_06_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_05_06_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_06_06_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_07_06_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_08_06_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_06, l52_matchings_06, neg_l42_02, "basic_09_06_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_01_06_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_02_06_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_03_06_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_04_06_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_05_06_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_06_06_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_07_06_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_08_06_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_06, l52_matchings_06, neg_l42_03, "basic_09_06_c4_3")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_01_07_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_02_07_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_03_07_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_04_07_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_05_07_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_06_07_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_07_07_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_08_07_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_07, l52_matchings_07, neg_l42_01, "basic_09_07_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_01_07_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_02_07_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_03_07_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_04_07_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_05_07_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_06_07_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_07_07_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_08_07_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_07, l52_matchings_07, neg_l42_02, "basic_09_07_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_01_07_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_02_07_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_03_07_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_04_07_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_05_07_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_06_07_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_07_07_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_08_07_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_07, l52_matchings_07, neg_l42_03, "basic_09_07_c4_3")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_01_08_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_02_08_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_03_08_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_04_08_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_05_08_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_06_08_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_07_08_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_08_08_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_08, l52_matchings_08, neg_l42_01, "basic_09_08_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_01_08_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_02_08_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_03_08_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_04_08_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_05_08_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_06_08_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_07_08_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_08_08_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_08, l52_matchings_08, neg_l42_02, "basic_09_08_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_01_08_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_02_08_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_03_08_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_04_08_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_05_08_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_06_08_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_07_08_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_08_08_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_08, l52_matchings_08, neg_l42_03, "basic_09_08_c4_3")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_01_09_c4_1")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_02_09_c4_1")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_03_09_c4_1")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_04_09_c4_1")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_05_09_c4_1")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_06_09_c4_1")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_07_09_c4_1")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_08_09_c4_1")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_09, l52_matchings_09, neg_l42_01, "basic_09_09_c4_1")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_01_09_c4_2")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_02_09_c4_2")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_03_09_c4_2")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_04_09_c4_2")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_05_09_c4_2")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_06_09_c4_2")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_07_09_c4_2")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_08_09_c4_2")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_09, l52_matchings_09, neg_l42_02, "basic_09_09_c4_2")
-
-    syn_we_c4(l4_matchings_01, l5_matchings_01, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_01_09_c4_3")
-    syn_we_c4(l4_matchings_02, l5_matchings_02, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_02_09_c4_3")
-    syn_we_c4(l4_matchings_03, l5_matchings_03, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_03_09_c4_3")
-    syn_we_c4(l4_matchings_04, l5_matchings_04, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_04_09_c4_3")
-    syn_we_c4(l4_matchings_05, l5_matchings_05, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_05_09_c4_3")
-    syn_we_c4(l4_matchings_06, l5_matchings_06, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_06_09_c4_3")
-    syn_we_c4(l4_matchings_07, l5_matchings_07, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_07_09_c4_3")
-    syn_we_c4(l4_matchings_08, l5_matchings_08, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_08_09_c4_3")
-    syn_we_c4(l4_matchings_09, l5_matchings_09, l42_matchings_09, l52_matchings_09, neg_l42_03, "basic_09_09_c4_3")
-
-    # syn and we c4 and c5
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_01_03_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_02_03_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_03_03_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_04_03_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_05_03_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_06_03_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_07_03_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_08_03_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01,"basic_09_03_c45_1")
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_01_04_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_02_04_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_03_04_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_04_04_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_05_04_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_06_04_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_07_04_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_08_04_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_09_04_c45_1")
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_01_05_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_02_05_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_03_05_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_04_05_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_05_05_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_06_05_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_07_05_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_08_05_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_09_05_c45_1")
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_01_06_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_02_06_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_03_06_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_04_06_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_05_06_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_06_06_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_07_06_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_08_06_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_09_06_c45_1")
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_01_07_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_02_07_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_03_07_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_04_07_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_05_07_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_06_07_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_07_07_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_08_07_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_09_07_c45_1")
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_01_08_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_02_08_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_03_08_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_04_08_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_05_08_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_06_08_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_07_08_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_08_08_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_09_08_c45_1")
-
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_01_09_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_02_09_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_03_09_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_04_09_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_05_09_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_06_09_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_07_09_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_08_09_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_09_09_c45_1")
-
+    # # syn and we c4
     #
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_01_03_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_02_03_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_03_03_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_04_03_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_05_03_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_06_03_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_07_03_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_08_03_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_09_03_c45_1")
+    # # syn and we c4 and c5
+    #
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_01_04_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_02_04_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_03_04_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_04_04_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_05_04_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_06_04_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_07_04_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_08_04_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_09_04_c45_1")
+    neg = 1
+    six = 2
+    pos = 5
+    neg_l42 = read(path_to_raw_data + "neg_l42_0{}".format(neg))
+    neg_l52 = read(path_to_raw_data + "neg_l52_0{}".format(neg))
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_01_05_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_02_05_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_03_05_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_04_05_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_05_05_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_06_05_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_07_05_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_08_05_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_09_05_c45_1")
+    # for six in tqdm(range(2, 8, 2)):
+    l6 = read(path_to_raw_data + "l6_0{}_1".format(six))
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_01_06_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_02_06_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_03_06_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_04_06_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_05_06_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_06_06_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_07_06_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_08_06_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_09_06_c45_1")
+    # for pos in tqdm(range(3, 10)):
+    l42 = read(path_to_raw_data + "l42_0{}".format(pos))
+    l52 = read(path_to_raw_data + "l52_0{}".format(pos))
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_01_07_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_02_07_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_03_07_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_04_07_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_05_07_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_06_07_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_07_07_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_08_07_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_09_07_c45_1")
+    results = dict()
+    # for neg in tqdm(range(1, 3)):
+    for st in tqdm(np.arange(1, 5.5, 0.5)):
+        print("\t{}".format(st))
+        for cr in tqdm(np.arange(0.5, 0.99, 0.1)):
+            print("\t\t{}".format(cr))
+            i = 1
+            # for i in tqdm(range(2, 10, 2)):
+            l4 = read(path_to_raw_data + "l4_0{}".format(i))
+            l5 = read(path_to_raw_data + "l5_0{}".format(i))
+            name = "st_{}_cr_{}".format(st, cr)
+            p, r, ps, rs = syn_we_c4_c5_c6(l4, l5, l6, l42, l52, neg_l42, neg_l52, name, cr, st)
+            results[name] = (p, r, ps, rs)
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_01_08_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_02_08_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_03_08_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_04_08_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_05_08_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_06_08_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_07_08_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_08_08_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_09_08_c45_1")
+    # f = open('results.txt', 'rw')
+    # for r in results.keys():
+    #     f.write("{}:{}\n".format(r, str(results[r])))
+    # f.close()
 
-    syn_we_c4_c5(l4_matchings_01, l5_matchings_01, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_01_09_c45_1")
-    syn_we_c4_c5(l4_matchings_02, l5_matchings_02, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_02_09_c45_1")
-    syn_we_c4_c5(l4_matchings_03, l5_matchings_03, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_03_09_c45_1")
-    syn_we_c4_c5(l4_matchings_04, l5_matchings_04, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_04_09_c45_1")
-    syn_we_c4_c5(l4_matchings_05, l5_matchings_05, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_05_09_c45_1")
-    syn_we_c4_c5(l4_matchings_06, l5_matchings_06, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_06_09_c45_1")
-    syn_we_c4_c5(l4_matchings_07, l5_matchings_07, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_07_09_c45_1")
-    syn_we_c4_c5(l4_matchings_08, l5_matchings_08, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_08_09_c45_1")
-    syn_we_c4_c5(l4_matchings_09, l5_matchings_09, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_09_09_c45_1")
-
-    # cancel l6
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_01_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_02_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_03_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_04_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_05_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_06_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_07_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_08_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_09_03_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_01_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_02_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_03_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_04_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_05_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_06_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_07_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_08_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_09_04_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_01_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_02_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_03_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_04_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_05_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_06_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_07_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_08_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_09_05_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_01_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_02_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_03_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_04_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_05_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_06_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_07_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_08_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_09_06_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_01_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_02_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_03_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_04_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_05_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_06_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_07_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_08_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_09_07_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_01_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_02_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_03_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_04_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_05_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_06_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_07_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_08_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_09_08_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_01_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_02_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_03_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_04_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_05_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_06_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_07_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_08_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_09_09_c456_02_1")
-
-    #_c6l6_02_1,602_
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_01_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_02_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_03_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_04_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_05_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_06_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_07_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_08_03_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_09_03_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_01_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_02_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_03_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_04_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_05_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_06_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_07_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_08_04_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_09_04_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_01_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_02_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_03_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_04_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_05_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_06_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_07_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_08_05_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_09_05_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_01_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_02_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_03_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_04_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_05_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_06_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_07_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_08_06_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_09_06_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_01_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_02_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_03_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_04_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_05_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_06_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_07_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_08_07_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_09_07_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_01_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_02_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_03_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_04_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_05_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_06_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_07_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_08_08_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_09_08_c456_02_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_01_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_02_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_03_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_04_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_05_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_06_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_07_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_08_09_c456_02_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_02_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_09_09_c456_02_1")
-
-    # other batch
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_01_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_02_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_03_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_04_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_05_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_06_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_07_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_08_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_09_03_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_01_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_02_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_03_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_04_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_05_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_06_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_07_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_08_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_09_04_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_01_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_02_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_03_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_04_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_05_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_06_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_07_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_08_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_09_05_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_01_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_02_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_03_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_04_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_05_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_06_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_07_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_08_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_09_06_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_01_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_02_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_03_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_04_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_05_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_06_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_07_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_08_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_09_07_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_01_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_02_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_03_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_04_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_05_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_06_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_07_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_08_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_09_08_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_01_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_02_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_03_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_04_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_05_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_06_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_07_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_08_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_09_09_c456_04_1")
-
-    # _c6l6_02_1,602_
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_01_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_02_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_03_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_04_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_05_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_06_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_07_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_08_03_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_09_03_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_01_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_02_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_03_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_04_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_05_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_06_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_07_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_08_04_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_09_04_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_01_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_02_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_03_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_04_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_05_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_06_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_07_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_08_05_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_09_05_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_01_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_02_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_03_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_04_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_05_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_06_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_07_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_08_06_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_09_06_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_01_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_02_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_03_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_04_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_05_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_06_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_07_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_08_07_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_09_07_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_01_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_02_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_03_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_04_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_05_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_06_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_07_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_08_08_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_09_08_c456_04_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_01_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_02_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_03_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_04_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_05_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_06_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_07_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_08_09_c456_04_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_04_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_09_09_c456_04_1")
-
-    # another batch
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_01_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_02_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_03_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_04_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_05_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_06_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_07_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_08_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_01, neg_l52_01, "basic_09_03_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_01_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_02_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_03_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_04_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_05_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_06_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_07_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_08_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_01, neg_l52_01, "basic_09_04_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_01_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_02_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_03_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_04_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_05_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_06_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_07_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_08_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_01, neg_l52_01, "basic_09_05_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_01_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_02_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_03_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_04_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_05_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_06_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_07_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_08_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_01, neg_l52_01, "basic_09_06_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_01_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_02_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_03_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_04_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_05_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_06_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_07_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_08_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_01, neg_l52_01, "basic_09_07_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_01_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_02_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_03_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_04_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_05_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_06_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_07_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_08_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_01, neg_l52_01, "basic_09_08_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_01_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_02_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_03_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_04_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_05_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_06_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_07_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_08_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_01, neg_l52_01, "basic_09_09_c456_06_1")
-
-    # _c6l6_02_1,602_
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_01_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_02_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_03_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_04_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_05_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_06_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_07_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_08_03_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_03, l52_matchings_03, neg_l42_02, neg_l52_02, "basic_09_03_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_01_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_02_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_03_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_04_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_05_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_06_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_07_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_08_04_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_04, l52_matchings_04, neg_l42_02, neg_l52_02, "basic_09_04_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_01_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_02_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_03_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_04_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_05_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_06_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_07_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_08_05_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_05, l52_matchings_05, neg_l42_02, neg_l52_02, "basic_09_05_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_01_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_02_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_03_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_04_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_05_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_06_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_07_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_08_06_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_06, l52_matchings_06, neg_l42_02, neg_l52_02, "basic_09_06_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_01_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_02_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_03_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_04_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_05_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_06_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_07_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_08_07_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_07, l52_matchings_07, neg_l42_02, neg_l52_02, "basic_09_07_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_01_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_02_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_03_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_04_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_05_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_06_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_07_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_08_08_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_08, l52_matchings_08, neg_l42_02, neg_l52_02, "basic_09_08_c456_06_1")
-
-    syn_we_c4_c5_c6(l4_matchings_01, l5_matchings_01, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_01_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_02, l5_matchings_02, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_02_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_03, l5_matchings_03, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_03_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_04, l5_matchings_04, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_04_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_05, l5_matchings_05, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_05_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_06, l5_matchings_06, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_06_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_07, l5_matchings_07, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_07_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_08, l5_matchings_08, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_08_09_c456_06_1")
-    syn_we_c4_c5_c6(l4_matchings_09, l5_matchings_09, l6_06_1, l42_matchings_09, l52_matchings_09, neg_l42_02, neg_l52_02, "basic_09_09_c456_06_1")
 
     # last we add l1 and l7 to whatever is the best configuration
 
@@ -2853,7 +1897,7 @@ if __name__ == "__main__":
 
     # Load glove model
     print("Loading language model...")
-    path_to_glove_model = "glove/glove.6B.100d.txt"
+    path_to_glove_model = "../glove/glove.6B.100d.txt"
     glove_api.load_model(path_to_glove_model)
     print("Loading language model...OK")
 
@@ -2864,13 +1908,13 @@ if __name__ == "__main__":
     #                         "../glove/glove.6B.100d.txt",
     #                         "results/")
 
-    # generate_results_battery_parameters("../models/chembl22/", "efo", "cache_onto/efo.pkl",
-    #                                     "../glove/glove.6B.100d.txt", "raw/")
+    generate_results_battery_parameters("../models/chembl22/", "efo", "cache_onto/efo.pkl",
+                                        "../glove/glove.6B.100d.txt", "raw/")
     #
     # generate_results_battery_parameters2("../models/chembl22/", "efo", "cache_onto/efo.pkl",
     #                                     "../glove/glove.6B.100d.txt", "raw/")
 
-    #best_config("../models/chembl22/", "efo", "cache_onto/efo.pkl", "../glove/glove.6B.100d.txt", "results/")
+    # best_config("../models/chembl22/", "efo", "cache_onto/efo.pkl", "../glove/glove.6B.100d.txt", "results/")
 
     #precision, recall = compute_pr("MATCHINGS_GROUND_TRUTH_CHEMBL", "results/" + "best_config")
 
@@ -2879,23 +1923,22 @@ if __name__ == "__main__":
 
     #check_quality_results("MATCHINGS_GROUND_TRUTH_CHEMBL", "results/")
 
-    #combine_and_report_results("raw/", "MATCHINGS_GROUND_TRUTH_CHEMBL")
+    # combine_and_report_results("raw/", "MATCHINGS_GROUND_TRUTH_CHEMBL")
 
-    cl, cs, om = local_test("raw/", "MATCHINGS_GROUND_TRUTH_CHEMBL")
-    exit()
+    # cl, cs, om = local_test("raw/", "MATCHINGS_GROUND_TRUTH_CHEMBL")
+    # exit()
 
-    cs = [(el, "none") for el in cs]
-
-    links = om.find_links(cs)
-
-    fanout = defaultdict(int)
-    for sch, prop, cla in links:
-        fanout[sch] += 1
-
-    for k, v, in fanout.items():
-        print(str(k) + " fanout: " + str(v))
-
-    print("LINKS TOTAL: " + str(len(links)))
-    for l in links:
-        print(str(l))
-
+    # cs = [(el, "none") for el in cs]
+    #
+    # links = om.find_links(cs)
+    #
+    # fanout = defaultdict(int)
+    # for sch, prop, cla in links:
+    #     fanout[sch] += 1
+    #
+    # for k, v, in fanout.items():
+    #     print(str(k) + " fanout: " + str(v))
+    #
+    # print("LINKS TOTAL: " + str(len(links)))
+    # for l in links:
+    #     print(str(l))

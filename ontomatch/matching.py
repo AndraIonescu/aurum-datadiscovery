@@ -47,13 +47,15 @@ class Matching:
         for kr_name, values in self.source_level_matchings.items():
             for class_name, ms in values.items():
                 mcode = get_matching_code(ms)
-                match = ((self.db_name, self.source_name, "_"), (kr_name, class_name), mcode)
+                # match = ((self.db_name, self.source_name, "_"), (kr_name, class_name), mcode)
+                match = ((self.db_name, self.source_name, "_"), (kr_name, class_name))
                 matchings.append(match)
         for attr_name, values in self.attr_matchings.items():
             for kr_name, classes in values.items():
                 for class_name, ms in classes.items():
                     mcode = get_matching_code(ms)
-                    match = ((self.db_name, self.source_name, attr_name), (kr_name, class_name), mcode)
+                    # match = ((self.db_name, self.source_name, attr_name), (kr_name, class_name), mcode)
+                    match = ((self.db_name, self.source_name, attr_name), (kr_name, class_name))
                     matchings.append(match)
         return matchings
 

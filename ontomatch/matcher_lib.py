@@ -195,24 +195,20 @@ def summarize_matchings_to_ancestor(om, matchings, threshold_to_summarize=2, sum
 
 def combine_matchings(all_matchings):
 
-    def process_attr_matching(building_matching_objects, m, matching_type):
+    def process_matching(building_matching_objects, m, matching_type, attr=False):
         sch, krn = m
         db_name, source_name, field_name = sch
         kr_name, class_name = krn
         mobj = building_matching_objects.get((db_name, source_name), None)
-        if mobj is None:
-            mobj = Matching(db_name, source_name)
-        mobj.add_attribute_correspondence(field_name, kr_name, class_name, matching_type)
-        building_matching_objects[(db_name, source_name)] = mobj
 
-    def process_relation_matching(building_matching_objects, m, matching_type):
-        sch, krn = m
-        db_name, source_name, field_name = sch
-        kr_name, class_name = krn
-        mobj = building_matching_objects.get((db_name, source_name), None)
         if mobj is None:
             mobj = Matching(db_name, source_name)
-        mobj.add_relation_correspondence(kr_name, class_name, matching_type)
+
+        if attr:
+            mobj.add_attribute_correspondence(field_name, kr_name, class_name, matching_type)
+        else:
+            mobj.add_relation_correspondence(kr_name, class_name, matching_type)
+
         building_matching_objects[(db_name, source_name)] = mobj
 
     l1_matchings = all_matchings[MatchingType.L1_CLASSNAME_ATTRVALUE]
@@ -227,28 +223,28 @@ def combine_matchings(all_matchings):
     building_matching_objects = defaultdict(None)  # (db_name, source_name) -> stuff
 
     for m in l1_matchings:
-        process_attr_matching(building_matching_objects, m, MatchingType.L1_CLASSNAME_ATTRVALUE)
+        process_matching(building_matching_objects, m, MatchingType.L1_CLASSNAME_ATTRVALUE, True)
 
     for m in l2_matchings:
-        process_attr_matching(building_matching_objects, m, MatchingType.L2_CLASSVALUE_ATTRVALUE)
+        process_matching(building_matching_objects, m, MatchingType.L2_CLASSVALUE_ATTRVALUE, True)
 
     for m in l4_matchings:
-        process_relation_matching(building_matching_objects, m, MatchingType.L4_CLASSNAME_RELATIONNAME_SYN)
+        process_matching(building_matching_objects, m, MatchingType.L4_CLASSNAME_RELATIONNAME_SYN)
 
     for m in l42_matchings:
-        process_relation_matching(building_matching_objects, m, MatchingType.L42_CLASSNAME_RELATIONNAME_SEM)
+        process_matching(building_matching_objects, m, MatchingType.L42_CLASSNAME_RELATIONNAME_SEM)
 
     for m in l5_matchings:
-        process_attr_matching(building_matching_objects, m, MatchingType.L5_CLASSNAME_ATTRNAME_SYN)
+        process_matching(building_matching_objects, m, MatchingType.L5_CLASSNAME_ATTRNAME_SYN, True)
 
     for m in l52_matchings:
-        process_attr_matching(building_matching_objects, m, MatchingType.L52_CLASSNAME_ATTRNAME_SEM)
+        process_matching(building_matching_objects, m, MatchingType.L52_CLASSNAME_ATTRNAME_SEM, True)
 
     for m in l6_matchings:
-        process_relation_matching(building_matching_objects, m, MatchingType.L6_CLASSNAME_RELATION_SEMSIG)
+        process_matching(building_matching_objects, m, MatchingType.L6_CLASSNAME_RELATION_SEMSIG)
 
     for m in l7_matchings:
-        process_attr_matching(building_matching_objects, m, MatchingType.L7_CLASSNAME_ATTRNAME_FUZZY)
+        process_matching(building_matching_objects, m, MatchingType.L7_CLASSNAME_ATTRNAME_FUZZY, True)
 
     return building_matching_objects
 

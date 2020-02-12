@@ -12,10 +12,10 @@ from ontomatch.sem_prop_benchmarking import write_matchings_to, compute_pr_match
 from ontomatch.ss_api import SSAPI
 
 
-def generate_matchings(network, om, store_client, path_to_results):
+def generate_matchings(network, om, path_to_results):
 
-    l7_matchings = matcherlib.find_hierarchy_content_fuzzy(om.kr_handlers, store_client)
-    write_matchings_to(path_to_results + 'l7', l7_matchings)
+    # l7_matchings = matcherlib.find_hierarchy_content_fuzzy(om.kr_handlers, store_client)
+    # write_matchings_to(path_to_results + 'l7', l7_matchings)
 
     l4_matchings_01 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
                                                                     minhash_sim_threshold=0.1)
@@ -35,7 +35,7 @@ def generate_matchings(network, om, store_client, path_to_results):
 
     l52_matchings_05, neg_l52_matchings_02 = matcherlib.find_relation_class_attr_name_sem_matchings(network, om.kr_handlers,
                                                                                           semantic_sim_threshold=0.5,
-                                                                                          negative_signal_threshold=0.2,
+                                                                                          negative_signal_threshold=0.1,
                                                                                           add_exact_matches=False,
                                                                                           penalize_unknown_word=True)
     write_matchings_to(path_to_results + 'l52', l52_matchings_05)
@@ -181,7 +181,7 @@ if __name__ == "__main__":
     # Deserialize model
     network = fieldnetwork.deserialize_network(path_to_serialized_model)
     # Create client
-    store_client = StoreHandler()
+    # store_client = StoreHandler()
 
     # Load glove model
     print("Loading language model...")
@@ -193,14 +193,14 @@ if __name__ == "__main__":
     content_sim_index = io.deserialize_object(path_to_serialized_model + 'content_sim_index.pkl')
 
     # Create ontomatch api
-    om = SSAPI(network, store_client, schema_sim_index, content_sim_index)
+    om = SSAPI(network, None, schema_sim_index, content_sim_index)
     # Load parsed ontology
     om.add_krs([(onto_name, path_to_ontology)], parsed=True)
 
-    # Build content sim
-    om.priv_build_content_sim(0.6)
+    # # Build content sim
+    # om.priv_build_content_sim(0.6)
 
     print("Benchmarking matchers and linkers")
-    generate_matchings(network, om, store_client, path_to_results)
+    generate_matchings(network, om, path_to_results)
     precision, recall = combine_and_report_results(om, path_to_results, path_to_gold_standard)
     print("F1-score: {}".format(2 * precision * recall / (precision + recall)))

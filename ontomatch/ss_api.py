@@ -27,7 +27,7 @@ class SSAPI:
         self.store_client = store_client
         self.schema_sim_index = schema_sim_index
         self.content_sim_index = content_sim_index
-        # self.srql = API(self.network, self.store_client)
+        self.srql = API(self.network, self.store_client)
         self.krs = []
         self.kr_handlers = dict()
 

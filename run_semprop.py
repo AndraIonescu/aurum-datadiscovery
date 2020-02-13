@@ -12,10 +12,10 @@ from ontomatch.sem_prop_benchmarking import write_matchings_to, compute_pr_match
 from ontomatch.ss_api import SSAPI
 
 
-def generate_matchings(network, om, path_to_results):
+def generate_matchings(network, store_client, om, path_to_results):
 
-    # l7_matchings = matcherlib.find_hierarchy_content_fuzzy(om.kr_handlers, store_client)
-    # write_matchings_to(path_to_results + 'l7', l7_matchings)
+    l7_matchings = matcherlib.find_hierarchy_content_fuzzy(om.kr_handlers, store_client)
+    write_matchings_to(path_to_results + 'l7', l7_matchings)
 
     l4_matchings_01 = matcherlib.find_relation_class_name_matchings(network, om.kr_handlers,
                                                                     minhash_sim_threshold=0.1)
@@ -56,7 +56,7 @@ def list_from_dict(combined):
     return l
 
 
-def combine_matchings(l4, l5, l6, l42, l52, nl42, nl52, ground_truth_matchings, om, cutting_ratio=0.8,
+def combine_matchings(l4, l5, l6, l42, l52, nl42, nl52, l7, ground_truth_matchings, om, cutting_ratio=0.8,
                       summary_threshold=1):
         print("Started computation ... ")
         l4_dict = dict()
@@ -106,6 +106,8 @@ def combine_matchings(l4, l5, l6, l42, l52, nl42, nl52, ground_truth_matchings, 
         all_matchings[MatchingType.L5_CLASSNAME_ATTRNAME_SYN] = l5
         all_matchings[MatchingType.L42_CLASSNAME_RELATIONNAME_SEM] = l42
         all_matchings[MatchingType.L52_CLASSNAME_ATTRNAME_SEM] = l52
+        all_matchings[MatchingType.L7_CLASSNAME_ATTRNAME_FUZZY] = l7
+
         combined = matcherlib.combine_matchings(all_matchings)
         combined_list = list_from_dict(combined)
 
@@ -149,8 +151,9 @@ def combine_and_report_results(om, path_to_raw_data, path_to_ground_truth_file):
     l52 = read(path_to_raw_data + "l52")
     l4 = read(path_to_raw_data + "l4")
     l5 = read(path_to_raw_data + "l5")
+    l7 = read(path_to_raw_data + "l7")
 
-    precision, recall = combine_matchings(l4, l5, l6, l42, l52, neg_l42, neg_l52, ground_truth_matchings, om)
+    precision, recall = combine_matchings(l4, l5, l6, l42, l52, neg_l42, neg_l52, l7, ground_truth_matchings, om)
     return precision, recall
 
 
@@ -181,7 +184,7 @@ if __name__ == "__main__":
     # Deserialize model
     network = fieldnetwork.deserialize_network(path_to_serialized_model)
     # Create client
-    # store_client = StoreHandler()
+    store_client = StoreHandler()
 
     # Load glove model
     print("Loading language model...")
@@ -193,14 +196,14 @@ if __name__ == "__main__":
     content_sim_index = io.deserialize_object(path_to_serialized_model + 'content_sim_index.pkl')
 
     # Create ontomatch api
-    om = SSAPI(network, None, schema_sim_index, content_sim_index)
+    om = SSAPI(network, store_client, schema_sim_index, content_sim_index)
     # Load parsed ontology
     om.add_krs([(onto_name, path_to_ontology)], parsed=True)
 
     # # Build content sim
-    # om.priv_build_content_sim(0.6)
+    om.priv_build_content_sim(0.6)
 
     print("Benchmarking matchers and linkers")
-    generate_matchings(network, om, path_to_results)
+    generate_matchings(network, store_client, om, path_to_results)
     precision, recall = combine_and_report_results(om, path_to_results, path_to_gold_standard)
     print("F1-score: {}".format(2 * precision * recall / (precision + recall)))
